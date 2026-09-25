@@ -1,1 +1,1 @@
-# superz_cool_projectzzz-
+the real deal is on my google drive, im doing this because its something the teacher is requesting. not everything is compiled in a folder because i dont know how to get folders inside github, maybe i dont need to. but the real shit is on my google drive.
