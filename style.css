@@ -1,0 +1,763 @@
+body {
+    font-family: Arial, sans-serif, 'Comic Sans MS';
+    background-color: black;
+  }
+  
+  .menu {
+    background: #0d1117;  /* GitHub dark */
+    border-bottom: 2px solid #00d4ff;
+  }
+  
+  .menu ul {
+    list-style: none;
+    display: flex;
+  }
+  
+  .menu ul li {
+    position: relative;
+  }
+  
+  .menu ul li a {
+    display: block;
+    padding: 15px 25px;
+    color: white;
+    text-decoration: none;
+  }
+  
+  .menu ul li a:hover {
+    background: #1a2332;
+    color: #00d4ff;
+  }
+  
+  .menu ul li ul {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: #0d1117;
+    min-width: 180px;
+    flex-direction: column;
+  }
+  
+  .menu ul li:hover ul {
+    display: flex;
+  }
+  
+  .menu ul li ul li a {
+    padding: 12px 20px;
+  }
+  
+  .menu ul li ul li a:hover {
+    background: #1a2332;
+    color: #00d4ff;
+  }
+  .logo-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 20px;
+    margin-right: 30px;
+}
+.logo-image{
+  height: 40px;
+  width: auto;
+  display: block;}
+  /* ===== UNDERTALE TEXTBOX ===== */
+.textbox {
+    /* Main container */
+    background: #000000;
+    border: 4px solid #ffffff;
+    border-radius: 8px;
+    padding: 20px 30px;
+    max-width: 800px;
+    margin: 20px auto;
+    position: relative;
+    box-shadow: 
+        0 0 0 2px #000000,
+        inset 0 0 0 2px #000000,
+        0 0 20px rgba(255, 255, 255, 0.1);
+    
+    /* Undertale font style */
+    font-family: 'VT323', 'Courier New', monospace;
+    color: #ffffff;
+    font-size: 24px;
+    line-height: 1.6;
+    min-height: 120px;
+    
+    /* Flex for content alignment */
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+/* ===== TEXT CONTENT ===== */
+.textbox .text-content {
+    flex: 1;
+}
+
+/* ===== SPEAKER NAME (Like Undertale) ===== */
+.textbox .speaker-name {
+    color: #ffff00;
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+/* ===== TEXT ANIMATION (Typewriter effect) ===== */
+.textbox .dialogue {
+    margin: 0;
+    padding: 0;
+}
+
+/* ===== TEXTBOX WITH CHARACTER PORTRAIT ===== */
+.textbox.with-portrait {
+    padding-left: 120px;
+    min-height: 150px;
+}
+
+.textbox .portrait {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 80px;
+    height: 80px;
+    background: #1a1a2e;
+    border: 2px solid #ffffff;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    image-rendering: pixelated;
+}
+
+.textbox .portrait img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    image-rendering: pixelated;
+}
+
+/* ===== UNDERLINE ANIMATION (Like Undertale) ===== */
+.textbox .underline {
+    display: inline-block;
+    border-bottom: 2px solid #ffffff;
+    animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+/* ===== TEXTBOX WITH OPTIONS (Like Undertale battles) ===== */
+.textbox.options {
+    flex-direction: column;
+    align-items: flex-start;
+    min-height: auto;
+}
+
+.textbox .option-list {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0 0 0;
+    width: 100%;
+}
+
+.textbox .option-list li {
+    padding: 8px 15px;
+    margin: 4px 0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-left: 3px solid transparent;
+    font-size: 22px;
+}
+
+.textbox .option-list li:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-left-color: #ffff00;
+    color: #ffff00;
+}
+
+.textbox .option-list li.selected {
+    background: rgba(255, 255, 255, 0.15);
+    border-left-color: #ffff00;
+    color: #ffff00;
+}
+
+/* ===== TEXTBOX WITH BATTLE STATS ===== */
+.textbox.battle-stats {
+    background: #0a0a0a;
+    border-color: #ff6b00;
+    font-size: 20px;
+    min-height: 80px;
+}
+
+.textbox .stat {
+    color: #39ff14;
+}
+
+.textbox .stat-label {
+    color: #b8b8d4;
+}
+
+/* ===== FLOATING TEXTBOX (Like Undertale dialog) ===== */
+.textbox.floating {
+    position: fixed;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: 700px;
+    width: 90%;
+    z-index: 1000;
+    animation: floatUp 0.3s ease;
+}
+
+@keyframes floatUp {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+/* ===== TEXTBOX WITH HEART (Undertale style) ===== */
+.textbox .heart {
+    display: inline-block;
+    color: #ff006e;
+    animation: heartPulse 1s ease-in-out infinite;
+    margin-right: 5px;
+}
+
+@keyframes heartPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+}
+
+/* ===== TYPING INDICATOR ===== */
+.textbox .typing-indicator {
+    display: flex;
+    gap: 5px;
+    padding: 5px 0;
+}
+
+.textbox .typing-indicator span {
+    width: 8px;
+    height: 8px;
+    background: #ffffff;
+    border-radius: 50%;
+    animation: typingBounce 1.4s ease-in-out infinite;
+}
+
+.textbox .typing-indicator span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+/* ===== SHARED SELECTION UI ===== */
+html {
+    min-height: 100%;
+    background: #050505;
+}
+
+body {
+    min-height: 100vh;
+    margin: 0;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    color: #ffffff;
+    background:
+        radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.08), transparent 36rem),
+        #050505;
+    font-family: 'VT323', 'Courier New', monospace;
+}
+
+.menu {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    max-width: 1100px;
+    min-height: 76px;
+    order: 2;
+    margin: 22px auto 0;
+    padding: 10px 14px;
+    background: #000000;
+    border: 4px solid #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 0 0 2px #000000, 0 0 24px rgba(255, 255, 255, 0.12);
+}
+
+.menu-toggle {
+    display: none;
+    width: 46px;
+    height: 46px;
+    margin-right: 10px;
+    color: #ffffff;
+    background: #000000;
+    border: 3px solid #ffffff;
+    border-radius: 4px;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
+    font-size: 1.1rem;
+    cursor: pointer;
+}
+
+.menu-toggle:hover,
+.menu-toggle:focus {
+    color: #ffff00;
+    border-color: #ffff00;
+    outline: none;
+}
+
+.logo-container {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+}
+
+.logo-image {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+}
+
+.menu > .logo-container > ul {
+    flex: 1;
+    justify-content: flex-end;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+}
+
+.menu ul li a {
+    position: relative;
+    padding: 12px 14px;
+    color: #ffffff;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
+    font-size: 0.58rem;
+    transition: color 0.15s ease, background 0.15s ease;
+}
+
+.menu ul li a:hover,
+.menu ul li a:focus,
+.menu ul li a.menu-selected {
+    color: #ffff00;
+    background: #171717;
+    outline: none;
+}
+
+.menu ul li a.menu-selected::before {
+    content: '♥';
+    position: absolute;
+    left: 3px;
+    color: #ff0000;
+    text-shadow: 0 0 8px #ff0000;
+}
+
+.menu ul li ul {
+    z-index: 20;
+    padding: 6px 0;
+    border: 2px solid #ffffff;
+    box-shadow: 0 6px 0 #000000;
+}
+
+.menu ul li ul li a {
+    padding: 12px 16px;
+    white-space: nowrap;
+}
+
+.menu ul li ul li.menu-current-page {
+    display: none;
+}
+
+body > p {
+    order: 1;
+    position: relative;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 30px 34px;
+    color: #ffffff;
+    background: #000000;
+    border: 4px solid #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 0 0 2px #000000, inset 0 0 0 2px #000000, 0 0 28px rgba(255, 255, 255, 0.1);
+    font-size: 1.45rem;
+    line-height: 1.45;
+    white-space: pre-line;
+}
+
+body > .textbox {
+    order: 1;
+}
+
+body > p::before {
+    content: '♥';
+    position: absolute;
+    top: 30px;
+    left: 10px;
+    color: #ff0000;
+    text-shadow: 0 0 12px #ff0000;
+}
+
+.menu-dialogue {
+    display: none;
+    order: 3;
+    position: relative;
+    max-width: 900px;
+    margin: -8px auto 22px;
+    padding: 18px 28px 20px 38px;
+    color: #ffffff;
+    background: #000000;
+    border: 4px solid #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 0 0 2px #000000, inset 0 0 0 2px #000000;
+    font-size: 1.25rem;
+}
+
+.menu-dialogue.active {
+    display: block;
+    animation: floatUp 0.2s ease;
+}
+
+.menu-dialogue::before {
+    content: '♥';
+    position: absolute;
+    top: 18px;
+    left: 12px;
+    color: #ff0000;
+    text-shadow: 0 0 12px #ff0000;
+}
+
+.menu-dialogue-speaker {
+    display: block;
+    margin-bottom: 4px;
+    color: #ffff00;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
+    font-size: 0.65rem;
+}
+
+.menu-dialogue-message {
+    margin: 0 0 8px;
+}
+
+.menu-dialogue-options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.menu-dialogue-options li {
+    padding: 8px 12px;
+    border-left: 3px solid transparent;
+    cursor: pointer;
+}
+
+.menu-dialogue-options li:hover,
+.menu-dialogue-options li:focus,
+.menu-dialogue-options li.menu-option-selected {
+    color: #ffff00;
+    background: #171717;
+    border-left-color: #ffff00;
+    outline: none;
+}
+
+.menu-dialogue-options li.menu-option-selected::before {
+    content: '♥';
+    margin-right: 8px;
+    color: #ff0000;
+}
+
+@media (max-width: 700px) {
+    body {
+        padding: 12px;
+    }
+
+    .menu {
+        align-items: flex-start;
+        margin-bottom: 14px;
+        padding: 8px;
+    }
+
+    .menu-toggle {
+        display: block;
+    }
+
+    .logo-container {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .menu > .logo-container > ul {
+        display: none;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .menu.menu-open > .logo-container > ul {
+        display: flex;
+    }
+
+    .menu ul li a {
+        padding: 10px 8px;
+        font-size: 0.48rem;
+    }
+
+    body > p {
+        padding: 24px 22px;
+        font-size: 1.2rem;
+    }
+
+    .menu-dialogue-options {
+        grid-template-columns: 1fr;
+    }
+}
+
+.textbox .typing-indicator span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes typingBounce {
+    0%, 60%, 100% {
+        transform: translateY(0);
+        opacity: 0.3;
+    }
+    30% {
+        transform: translateY(-10px);
+        opacity: 1;
+    }
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+    .textbox {
+        font-size: 18px;
+        padding: 15px 20px;
+        min-height: 100px;
+    }
+    
+    .textbox.with-portrait {
+        padding-left: 80px;
+        min-height: 120px;
+    }
+    
+    .textbox .portrait {
+        width: 60px;
+        height: 60px;
+        left: 15px;
+        font-size: 30px;
+    }
+    
+    .textbox .option-list li {
+        font-size: 18px;
+    }
+    
+    .textbox.floating {
+        bottom: 20px;
+        width: 95%;
+    }
+}
+
+@media (max-width: 480px) {
+    .textbox {
+        font-size: 16px;
+        padding: 12px 15px;
+        min-height: 80px;
+    }
+    
+    .textbox.with-portrait {
+        padding-left: 65px;
+        min-height: 100px;
+    }
+    
+    .textbox .portrait {
+        width: 45px;
+        height: 45px;
+        left: 10px;
+        font-size: 24px;
+    }
+}
+
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: #ffffff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+
+
+.slider {
+    position: relative;
+    overflow: hidden;
+    width: min(900px, 100%);
+    margin: 0 auto;
+    border: 4px solid #ffffff;
+    background: #000000;
+    box-shadow: 0 0 0 2px #000000, 0 0 24px rgba(255, 255, 255, 0.12);
+}
+
+.slide {
+    display: none;
+    margin: 0;
+    aspect-ratio: 16 / 10;
+}
+
+.slide.is-active {
+    display: block;
+}
+
+.slide img {
+  width: 100%;
+  height: 100%;
+    display: block;
+    object-fit: contain;
+    background: #111111;
+}
+
+.carousel-button {
+    position: absolute;
+    top: 50%;
+    width: 44px;
+    height: 44px;
+    color: #ffffff;
+    background: rgba(0, 0, 0, 0.75);
+    border: 2px solid #ffffff;
+    font-size: 1.4rem;
+    cursor: pointer;
+    transform: translateY(-50%);
+}
+
+.carousel-button:hover,
+.carousel-button:focus {
+    color: #ffff00;
+    border-color: #ffff00;
+    outline: none;
+}
+
+.carousel-previous {
+    left: 14px;
+}
+
+.carousel-next {
+    right: 14px;
+}
+
+.carousel-dots {
+    position: absolute;
+    right: 0;
+    bottom: 14px;
+    left: 0;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+}
+
+.carousel-dot {
+    width: 12px;
+    height: 12px;
+    padding: 0;
+    background: #555555;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.carousel-dot.is-active,
+.carousel-dot:hover,
+.carousel-dot:focus {
+    background: #ffff00;
+    outline: none;
+}
+
+.evidence-gallery,
+.evidence-videos {
+    order: 1;
+    width: min(1100px, 100%);
+    margin: 28px auto 0;
+}
+
+.section-heading {
+    margin-bottom: 18px;
+    text-align: center;
+}
+
+.section-heading h1,
+.section-heading h2 {
+    margin: 6px 0 0;
+    color: #ffffff;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
+    font-size: clamp(1rem, 3vw, 1.5rem);
+}
+
+.section-kicker {
+    color: #ffff00;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
+    font-size: 0.6rem;
+}
+
+.video-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.video-card {
+    margin: 0;
+    padding: 12px;
+    background: #000000;
+    border: 4px solid #ffffff;
+    box-shadow: 0 0 0 2px #000000;
+}
+
+.video-card video {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    display: block;
+    background: #111111;
+}
+
+.video-download {
+    display: block;
+    margin-top: 10px;
+    color: #00d4ff;
+    text-align: center;
+}
+
+.video-download:hover,
+.video-download:focus {
+    color: #ffff00;
+}
+
+.video-card h3 {
+    margin: 12px 0 2px;
+    color: #ffff00;
+    font-size: 1.15rem;
+    text-align: center;
+}
+
+@media (max-width: 700px) {
+    .video-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .carousel-button {
+        width: 38px;
+        height: 38px;
+    }
+}

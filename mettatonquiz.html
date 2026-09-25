@@ -1,0 +1,3826 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>📚 Mettaton's Quiz - Refuerzo Escolar</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet" />
+
+    <style>
+        /* ============================================================
+           GLOBAL RESET & BASE — BLACK & WHITE ONLY
+           ============================================================ */
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            image-rendering: pixelated;
+        }
+
+        body {
+            background: #000000;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            padding: 16px;
+            font-family: 'VT323', 'Courier New', monospace;
+        }
+
+        .game-wrapper {
+            background: #000000;
+            padding: 16px 18px 22px;
+            border-radius: 12px;
+            box-shadow: 0 0 0 4px #ffffff, inset 0 0 0 4px #000000;
+            max-width: 960px;
+            width: 100%;
+            border: 2px solid #ffffff;
+            position: relative;
+        }
+
+        .game-wrapper::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(0deg,
+                    rgba(0, 0, 0, 0) 0px,
+                    rgba(0, 0, 0, 0) 3px,
+                    rgba(0, 0, 0, 0.08) 3px,
+                    rgba(0, 0, 0, 0.08) 4px);
+            pointer-events: none;
+            border-radius: 12px;
+            z-index: 30;
+        }
+
+        #arenaContainer {
+            position: relative;
+            background: #000000;
+            border: 4px solid #ffffff;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            box-shadow: inset 0 0 40px rgba(255, 255, 255, 0.05);
+            aspect-ratio: 16 / 9;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        #battleCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background: #000000;
+            cursor: none;
+            touch-action: none;
+        }
+
+        .sprite-info {
+            position: absolute;
+            bottom: 8px;
+            right: 12px;
+            color: #444444;
+            font-size: 0.5rem;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 4px 10px;
+            border-radius: 4px;
+            border: 1px solid #333333;
+            z-index: 5;
+            pointer-events: none;
+            font-family: 'Press Start 2P', monospace;
+        }
+
+        /* ============================================================
+           UNDERTALE TEXTBOX
+           ============================================================ */
+        .textbox {
+            background: #000000;
+            border: 4px solid #ffffff;
+            border-radius: 8px;
+            padding: 20px 30px;
+            max-width: 100%;
+            margin: 8px 0 8px 0;
+            position: relative;
+            box-shadow: 0 0 0 2px #000000, inset 0 0 0 2px #000000;
+            font-family: 'VT323', 'Courier New', monospace;
+            color: #ffffff;
+            font-size: 24px;
+            line-height: 1.6;
+            min-height: 90px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .textbox .text-content {
+            flex: 1;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 4px;
+            position: relative;
+        }
+
+        .textbox .speaker-name {
+            color: #ffffff;
+            font-size: 20px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            min-width: 80px;
+        }
+
+        .textbox .dialogue {
+            margin: 0;
+            padding: 0;
+            flex: 1;
+            color: #ffffff;
+            white-space: pre-wrap;
+        }
+
+        .textbox .cursor {
+            display: inline-block;
+            width: 14px;
+            height: 22px;
+            background: #ffffff;
+            animation: blink 0.6s step-end infinite;
+            margin-left: 2px;
+        }
+
+        @keyframes blink {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0;
+            }
+        }
+
+        .textbox .heart-indicator {
+            position: absolute;
+            left: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #ff0000;
+            font-size: 20px;
+            display: none;
+            text-shadow: 0 0 15px #ff0000;
+        }
+
+        .textbox .heart-indicator.active {
+            display: block;
+        }
+
+        .textbox .answer-option {
+            display: block;
+            padding: 4px 8px;
+            margin: 2px 0;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            border-left: 3px solid transparent;
+            color: #ffffff;
+            font-size: 22px;
+            position: relative;
+        }
+
+        .textbox .answer-option .option-heart {
+            position: absolute;
+            left: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #ff0000;
+            font-size: 16px;
+            display: none;
+            text-shadow: 0 0 10px #ff0000;
+        }
+
+        .textbox .answer-option.active .option-heart {
+            display: block;
+        }
+
+        .textbox .answer-option:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-left-color: #ffffff;
+        }
+
+        .textbox .answer-option.selected-correct {
+            background: rgba(255, 255, 255, 0.3);
+            border-left-color: #ffffff;
+            color: #ffffff;
+        }
+
+        .textbox .answer-option.selected-wrong {
+            background: rgba(255, 255, 255, 0.1);
+            border-left-color: #666666;
+            color: #666666;
+        }
+
+        .enemy-hp-display {
+            display: none;
+            flex-basis: auto;
+            align-items: center;
+            gap: 10px;
+            width: fit-content;
+            max-width: 100%;
+            margin: 10px auto 0;
+            padding: 8px 10px;
+            border: 2px solid #ffffff;
+            color: #ffffff;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.55rem;
+        }
+
+        .enemy-hp-display.active {
+            display: flex;
+        }
+
+        .enemy-hp-name {
+            min-width: 120px;
+            color: #ffff00;
+        }
+
+        .enemy-hp-bar {
+            flex: 0 1 110px;
+            width: 110px;
+            height: 14px;
+            background: #1a1a1a;
+            border: 2px solid #ffffff;
+        }
+
+        .enemy-hp-bar span {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background: #ff4444;
+            transition: width 0.2s ease;
+        }
+
+        /* ============================================================
+           ACTION BUTTONS
+           ============================================================ */
+        .action-bar {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 8px;
+            margin: 6px 0 8px 0;
+            position: relative;
+        }
+
+        .action-btn {
+            background: #000000;
+            color: #ffffff;
+            font-family: 'Press Start 2P', 'Courier New', monospace;
+            font-size: 0.7rem;
+            padding: 12px 6px 12px 22px;
+            border: 3px solid #ffffff;
+            border-radius: 4px;
+            box-shadow: 0 4px 0 #000000, inset 0 -2px 0 #333333;
+            transition: 0.05s linear;
+            cursor: pointer;
+            text-align: center;
+            letter-spacing: 1px;
+            position: relative;
+        }
+
+        #fightBtn {
+            border-color: #ff5c3d;
+            color: #ff5c3d;
+        }
+        #actBtn {
+            border-color: #4fc3f7;
+            color: #4fc3f7;
+        }
+        #itemBtn {
+            border-color: #66bb6a;
+            color: #66bb6a;
+        }
+        #mercyBtn {
+            border-color: #ffd54f;
+            color: #ffd54f;
+        }
+
+        .action-btn:hover:not(:disabled) {
+            background: #1a1a1a;
+        }
+
+        .action-btn:active:not(:disabled) {
+            transform: translateY(4px);
+            box-shadow: 0 0px 0 #000000;
+        }
+
+        .action-btn:disabled {
+            opacity: 0.3;
+            transform: translateY(4px);
+            box-shadow: 0 0px 0 #000000;
+            cursor: not-allowed;
+        }
+
+        .action-btn.active {
+            background: #ffe135;
+            border-color: #ffe135;
+            color: #1a1400;
+            box-shadow: 0 4px 0 #7a6600, inset 0 -2px 0 #c9a900;
+        }
+
+        .action-btn .heart-indicator {
+            position: absolute;
+            left: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #ff0000;
+            font-size: 14px;
+            display: none;
+            text-shadow: 0 0 10px #ff0000;
+        }
+
+        .action-btn.active .heart-indicator {
+            display: block;
+        }
+
+        .options-grid {
+            display: none;
+        }
+
+        /* ============================================================
+           STATUS PANEL
+           ============================================================ */
+        .status-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            background: #000000;
+            padding: 6px 14px;
+            border: 3px solid #ffffff;
+            border-radius: 6px;
+            margin-top: 4px;
+        }
+
+        .status-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .player-name {
+            color: #ffffff;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.65rem;
+            padding: 3px 12px;
+            border: 2px solid #ffffff;
+            border-radius: 4px;
+            background: #000000;
+            letter-spacing: 1px;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .subject-display {
+            color: #4fc3f7;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.55rem;
+            padding: 3px 10px;
+            border: 2px solid #4fc3f7;
+            border-radius: 4px;
+            background: #000000;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+
+        .hp-container {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #000000;
+            padding: 3px 12px;
+            border: 2px solid #ffffff;
+            border-radius: 4px;
+        }
+
+        .hp-label {
+            color: #ff4444;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.65rem;
+        }
+
+        .hp-bar-outer {
+            width: 120px;
+            height: 14px;
+            background: #1a1a1a;
+            border: 2px solid #444444;
+            border-radius: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hp-bar-inner {
+            height: 100%;
+            background: #ff4444;
+            transition: width 0.3s ease;
+            border-radius: 1px;
+        }
+
+        .hp-text {
+            color: #ffffff;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.5rem;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .hp-text.temmie-hp {
+            color: #ff66aa;
+            font-size: 0.7rem;
+            text-shadow: 0 0 10px #ff66aa;
+            animation: temmiePulse 0.8s ease-in-out infinite;
+        }
+
+        @keyframes temmiePulse {
+            0%,
+            100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.2);
+            }
+        }
+
+        .status-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .rating-display {
+            color: #ffffff;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.65rem;
+            padding: 3px 12px;
+            border: 2px solid #ffffff;
+            border-radius: 4px;
+            background: #000000;
+        }
+
+        #feedbackMessage {
+            color: #ffffff;
+            font-size: 0.55rem;
+            padding: 3px 12px;
+            background: #000000;
+            border: 2px solid #ffffff;
+            border-radius: 4px;
+            flex: 1;
+            min-width: 80px;
+            text-align: center;
+            font-family: 'Press Start 2P', monospace;
+        }
+
+        /* ============================================================
+           NAME INPUT MODAL
+           ============================================================ */
+        .name-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            font-family: 'Press Start 2P', monospace;
+        }
+
+        .name-modal-content {
+            background: #000000;
+            border: 4px solid #ffffff;
+            border-radius: 12px;
+            padding: 40px 50px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 0 0 2px #000000, inset 0 0 0 2px #000000;
+        }
+
+        .name-modal-title {
+            color: #ffffff;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+        }
+
+        .name-modal-input {
+            background: #000000;
+            border: 3px solid #ffffff;
+            border-radius: 4px;
+            color: #ffffff;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 1.2rem;
+            padding: 12px 16px;
+            width: 100%;
+            text-align: center;
+            letter-spacing: 2px;
+            outline: none;
+        }
+
+        .name-modal-input:focus {
+            border-color: #ffe135;
+            box-shadow: 0 0 20px rgba(255, 225, 53, 0.2);
+        }
+
+        .name-modal-input::placeholder {
+            color: #444444;
+            font-size: 0.8rem;
+        }
+
+        .name-modal-submit {
+            background: #000000;
+            border: 3px solid #ffffff;
+            color: #ffffff;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.8rem;
+            padding: 12px 30px;
+            border-radius: 4px;
+            margin-top: 20px;
+            cursor: pointer;
+            transition: 0.1s;
+            box-shadow: 0 4px 0 #000000;
+        }
+
+        .name-modal-submit:hover {
+            background: #1a1a1a;
+            border-color: #ffe135;
+        }
+
+        .name-modal-submit:active {
+            transform: translateY(4px);
+            box-shadow: 0 0px 0 #000000;
+        }
+
+        .name-modal-hint {
+            color: #444444;
+            font-size: 0.5rem;
+            margin-top: 12px;
+            letter-spacing: 1px;
+        }
+
+        /* ============================================================
+           SUBJECT SELECTOR MODAL
+           ============================================================ */
+        .subject-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            font-family: 'Press Start 2P', monospace;
+        }
+
+        .subject-modal.active {
+            display: flex;
+        }
+
+        .subject-modal-content {
+            background: #000000;
+            border: 4px solid #ffffff;
+            border-radius: 12px;
+            padding: 30px 40px;
+            max-width: 700px;
+            width: 95%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 0 0 2px #000000, inset 0 0 0 2px #000000;
+        }
+
+        .subject-modal-title {
+            color: #ffffff;
+            font-size: 1rem;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+            text-align: center;
+        }
+
+        .subject-modal-subtitle {
+            color: #888888;
+            font-size: 0.6rem;
+            text-align: center;
+            margin-bottom: 20px;
+            font-family: 'VT323', monospace;
+            letter-spacing: 1px;
+        }
+
+        .subject-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+
+        .subject-btn {
+            background: #000000;
+            color: #ffffff;
+            border: 3px solid #ffffff;
+            border-radius: 8px;
+            padding: 16px 10px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.55rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .subject-btn:hover {
+            background: #1a1a1a;
+            border-color: #ffe135;
+            transform: scale(1.02);
+        }
+
+        .subject-btn:active {
+            transform: scale(0.95);
+        }
+
+        .subject-btn .subject-icon {
+            font-size: 1.5rem;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .subject-btn .subject-label {
+            font-size: 0.5rem;
+            color: #aaaaaa;
+        }
+
+        .subject-btn.matematicas {
+            border-color: #ff5c3d;
+        }
+        .subject-btn.matematicas:hover {
+            border-color: #ff5c3d;
+            background: #2a0a0a;
+        }
+
+        .subject-btn.lectura {
+            border-color: #4fc3f7;
+        }
+        .subject-btn.lectura:hover {
+            border-color: #4fc3f7;
+            background: #0a1a2a;
+        }
+
+        .subject-btn.ciencias {
+            border-color: #66bb6a;
+        }
+        .subject-btn.ciencias:hover {
+            border-color: #66bb6a;
+            background: #0a2a0a;
+        }
+
+        .subject-btn.historia {
+            border-color: #ffd54f;
+        }
+        .subject-btn.historia:hover {
+            border-color: #ffd54f;
+            background: #2a1a0a;
+        }
+
+        .subject-btn.geografia {
+            border-color: #ab47bc;
+        }
+        .subject-btn.geografia:hover {
+            border-color: #ab47bc;
+            background: #1a0a2a;
+        }
+
+        .subject-btn.computacion {
+            border-color: #26c6da;
+        }
+        .subject-btn.computacion:hover {
+            border-color: #26c6da;
+            background: #0a1a2a;
+        }
+
+        .subject-btn.arte {
+            border-color: #ec407a;
+        }
+        .subject-btn.arte:hover {
+            border-color: #ec407a;
+            background: #2a0a1a;
+        }
+
+        .subject-btn.musica {
+            border-color: #ffa726;
+        }
+        .subject-btn.musica:hover {
+            border-color: #ffa726;
+            background: #2a1a0a;
+        }
+
+        /* ============================================================
+           SECRET THEMES
+           ============================================================ */
+        .temmie-theme .textbox {
+            border-color: #ff66aa !important;
+            background: #ffccdd !important;
+        }
+        .temmie-theme .textbox .speaker-name {
+            color: #ff44aa !important;
+        }
+        .temmie-theme .action-btn {
+            border-color: #ff66aa !important;
+            color: #ff66aa !important;
+        }
+        .temmie-theme .action-btn.active {
+            background: #ff88bb !important;
+            border-color: #ff44aa !important;
+            color: #440022 !important;
+        }
+
+        .tenna-theme .textbox {
+            border-color: #ffcc00 !important;
+        }
+        .tenna-theme .textbox .speaker-name {
+            color: #ffcc00 !important;
+        }
+        .tenna-theme .action-btn {
+            border-color: #ffcc00 !important;
+            color: #ffcc00 !important;
+        }
+        .tenna-theme .action-btn.active {
+            background: #ffcc00 !important;
+            border-color: #ffcc00 !important;
+            color: #1a1400 !important;
+        }
+
+        .papyrus-theme .textbox {
+            border-color: #ff4444 !important;
+        }
+        .papyrus-theme .textbox .speaker-name {
+            color: #ff4444 !important;
+        }
+        .papyrus-theme .action-btn {
+            border-color: #ff4444 !important;
+            color: #ff4444 !important;
+        }
+        .papyrus-theme .action-btn.active {
+            background: #ff4444 !important;
+            border-color: #ff4444 !important;
+            color: #1a0000 !important;
+        }
+
+        .chara-theme .textbox {
+            border-color: #ff0000 !important;
+        }
+        .chara-theme .textbox .speaker-name {
+            color: #ff0000 !important;
+            text-shadow: 0 0 20px #ff0000 !important;
+        }
+
+        .hard-mode .textbox {
+            border-color: #ff6600 !important;
+        }
+        .hard-mode .textbox .speaker-name {
+            color: #ff6600 !important;
+        }
+
+        .tina-theme .textbox {
+            border-color: #ff69b4 !important;
+        }
+        .tina-theme .textbox .speaker-name {
+            color: #ff69b4 !important;
+            text-shadow: 0 0 20px #ff69b4 !important;
+        }
+
+        .tina-boss-theme .textbox {
+            border-color: #ff69b4 !important;
+            background: #1a0010 !important;
+            box-shadow: 0 0 30px rgba(255, 105, 180, 0.2) !important;
+        }
+        .tina-boss-theme .textbox .speaker-name {
+            color: #ff69b4 !important;
+            text-shadow: 0 0 20px #ff69b4, 0 0 40px #ff1493 !important;
+        }
+        .tina-boss-theme .action-btn {
+            border-color: #ff69b4 !important;
+            color: #ff69b4 !important;
+        }
+        .tina-boss-theme .action-btn.active {
+            background: #ff69b4 !important;
+            border-color: #ff1493 !important;
+            color: #1a0010 !important;
+        }
+        .tina-boss-theme .textbox .dialogue {
+            color: #ff88cc !important;
+            text-shadow: 0 0 15px #ff69b4 !important;
+        }
+        .tina-boss-theme .status-panel {
+            border-color: #ff69b4 !important;
+        }
+        .tina-boss-theme .player-name {
+            border-color: #ff69b4 !important;
+            color: #ff69b4 !important;
+        }
+        .tina-boss-theme .hp-container {
+            border-color: #ff69b4 !important;
+        }
+        .tina-boss-theme .rating-display {
+            border-color: #ff69b4 !important;
+            color: #ff69b4 !important;
+        }
+        .tina-boss-theme #feedbackMessage {
+            border-color: #ff69b4 !important;
+            color: #ff88cc !important;
+        }
+        .tina-boss-theme .game-wrapper {
+            border-color: #ff69b4 !important;
+            box-shadow: 0 0 0 4px #ff69b4, inset 0 0 0 4px #000000 !important;
+        }
+        .tina-boss-theme .hp-bar-inner {
+            background: #ff69b4 !important;
+        }
+        .tina-boss-theme .hp-label {
+            color: #ff69b4 !important;
+        }
+
+        .gaster-theme .textbox {
+            border-color: #6600ff !important;
+            background: #0a0018 !important;
+            box-shadow: 0 0 30px rgba(102, 0, 255, 0.2) !important;
+        }
+        .gaster-theme .textbox .speaker-name {
+            color: #9900ff !important;
+            text-shadow: 0 0 20px #9900ff, 0 0 40px #6600ff !important;
+        }
+        .gaster-theme .action-btn {
+            border-color: #6600ff !important;
+            color: #9900ff !important;
+        }
+        .gaster-theme .action-btn.active {
+            background: #6600ff !important;
+            border-color: #9900ff !important;
+            color: #1a0022 !important;
+        }
+        .gaster-theme .textbox .dialogue {
+            color: #bb88ff !important;
+            text-shadow: 0 0 15px #6600ff !important;
+        }
+        .gaster-theme .status-panel {
+            border-color: #6600ff !important;
+        }
+        .gaster-theme .player-name {
+            border-color: #6600ff !important;
+            color: #9900ff !important;
+        }
+        .gaster-theme .hp-container {
+            border-color: #6600ff !important;
+        }
+        .gaster-theme .rating-display {
+            border-color: #6600ff !important;
+            color: #9900ff !important;
+        }
+        .gaster-theme #feedbackMessage {
+            border-color: #6600ff !important;
+            color: #bb88ff !important;
+        }
+        .gaster-theme .game-wrapper {
+            border-color: #6600ff !important;
+            box-shadow: 0 0 0 4px #6600ff, inset 0 0 0 4px #000000 !important;
+        }
+        .gaster-theme .hp-bar-inner {
+            background: #9900ff !important;
+        }
+        .gaster-theme .hp-label {
+            color: #9900ff !important;
+        }
+
+        .susie-theme .textbox {
+            border-color: #cc4444 !important;
+        }
+        .susie-theme .textbox .speaker-name {
+            color: #cc4444 !important;
+            text-shadow: 0 0 20px #cc4444 !important;
+        }
+        .susie-theme .action-btn {
+            border-color: #cc4444 !important;
+            color: #cc4444 !important;
+        }
+        .susie-theme .action-btn.active {
+            background: #cc4444 !important;
+            border-color: #cc4444 !important;
+            color: #1a0000 !important;
+        }
+
+        /* ============================================================
+           RESPONSIVE
+           ============================================================ */
+        @media (max-width: 700px) {
+            .action-bar {
+                grid-template-columns: 1fr 1fr;
+            }
+            .action-btn {
+                font-size: 0.6rem;
+                padding: 10px 4px 10px 18px;
+            }
+            .status-panel {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 6px;
+            }
+            .status-left {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            .status-right {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            .hp-bar-outer {
+                width: 80px;
+            }
+            .player-name {
+                font-size: 0.5rem;
+                min-width: 60px;
+                padding: 2px 8px;
+            }
+            .subject-display {
+                font-size: 0.4rem;
+                padding: 2px 6px;
+            }
+            .hp-label {
+                font-size: 0.5rem;
+            }
+            .hp-text {
+                font-size: 0.4rem;
+                min-width: 24px;
+            }
+            .rating-display {
+                font-size: 0.5rem;
+                padding: 2px 8px;
+            }
+            #feedbackMessage {
+                font-size: 0.45rem;
+                padding: 2px 8px;
+            }
+            .name-modal-content {
+                padding: 30px 20px;
+            }
+            .name-modal-title {
+                font-size: 0.9rem;
+            }
+            .name-modal-input {
+                font-size: 0.9rem;
+                padding: 10px 12px;
+            }
+            .game-wrapper {
+                padding: 10px 10px 14px;
+            }
+            .action-btn .heart-indicator {
+                left: 4px;
+                font-size: 11px;
+            }
+            .subject-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .subject-btn {
+                font-size: 0.45rem;
+                padding: 12px 8px;
+            }
+            .subject-modal-content {
+                padding: 20px 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hp-bar-outer {
+                width: 60px;
+                height: 10px;
+            }
+            .hp-label {
+                font-size: 0.4rem;
+            }
+            .hp-text {
+                font-size: 0.35rem;
+                min-width: 20px;
+            }
+            .player-name {
+                font-size: 0.4rem;
+                min-width: 50px;
+                padding: 2px 6px;
+            }
+            .subject-display {
+                font-size: 0.35rem;
+                padding: 2px 4px;
+            }
+            .rating-display {
+                font-size: 0.4rem;
+                padding: 2px 6px;
+            }
+            #feedbackMessage {
+                font-size: 0.4rem;
+                padding: 2px 6px;
+            }
+            .status-panel {
+                padding: 4px 8px;
+            }
+            .subject-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .subject-btn {
+                font-size: 0.4rem;
+                padding: 10px 6px;
+            }
+            .subject-btn .subject-icon {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== NAME INPUT MODAL ===== -->
+    <div class="name-modal" id="nameModal">
+        <div class="name-modal-content">
+            <div class="name-modal-title">📺 ENTER YOUR NAME</div>
+            <input class="name-modal-input" id="nameInput" type="text" maxlength="8" placeholder="NAME" autofocus />
+            <button class="name-modal-submit" id="nameSubmit">▶ START</button>
+            <div class="name-modal-hint">PRESS ENTER OR CLICK START</div>
+        </div>
+    </div>
+
+    <!-- ===== SUBJECT SELECTOR MODAL ===== -->
+    <div class="subject-modal" id="subjectModal">
+        <div class="subject-modal-content">
+            <div class="subject-modal-title">📚 SELECCIONA UNA MATERIA</div>
+            <div class="subject-modal-subtitle">"ELIGE LA MATERIA QUE QUIERES REFORZAR, DARLING!" - METTATON</div>
+            <div class="subject-grid" id="subjectGrid">
+                <button class="subject-btn matematicas" data-subject="matematicas">
+                    <span class="subject-icon">📐</span>
+                    MATEMÁTICAS
+                    <span class="subject-label">números, álgebra, geometría</span>
+                </button>
+                <button class="subject-btn lectura" data-subject="lectura">
+                    <span class="subject-icon">📖</span>
+                    LECTURA
+                    <span class="subject-label">comprensión, vocabulario</span>
+                </button>
+                <button class="subject-btn ciencias" data-subject="ciencias">
+                    <span class="subject-icon">🔬</span>
+                    CIENCIAS
+                    <span class="subject-label">biología, química, física</span>
+                </button>
+                <button class="subject-btn historia" data-subject="historia">
+                    <span class="subject-icon">🌍</span>
+                    HISTORIA
+                    <span class="subject-label">eventos, fechas, personajes</span>
+                </button>
+                <button class="subject-btn geografia" data-subject="geografia">
+                    <span class="subject-icon">🗺️</span>
+                    GEOGRAFÍA
+                    <span class="subject-label">países, capitales, mapas</span>
+                </button>
+                <button class="subject-btn computacion" data-subject="computacion">
+                    <span class="subject-icon">💻</span>
+                    COMPUTACIÓN
+                    <span class="subject-label">hardware, programación</span>
+                </button>
+                <button class="subject-btn arte" data-subject="arte">
+                    <span class="subject-icon">🎨</span>
+                    ARTE
+                    <span class="subject-label">colores, técnicas, artistas</span>
+                </button>
+                <button class="subject-btn musica" data-subject="musica">
+                    <span class="subject-icon">🎵</span>
+                    MÚSICA
+                    <span class="subject-label">notas, instrumentos, teoría</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="game-wrapper">
+        <!-- ===== BATTLE ARENA ===== -->
+        <div id="arenaContainer">
+            <canvas id="battleCanvas" width="800" height="450"></canvas>
+            <div class="sprite-info">⬆ SPRITE SLOTS · METTATON · HEART</div>
+        </div>
+
+        <!-- ===== UNDERTALE TEXTBOX ===== -->
+        <div class="textbox" id="textbox">
+            <div class="text-content" id="textContent">
+                <span class="heart-indicator" id="textboxHeart">♥</span>
+                <span class="speaker-name" id="textLabel">📺 METTATON</span>
+                <span class="dialogue" id="textMessage">WELCOME, DARLING!</span>
+                <span class="cursor" id="textCursor"></span>
+            </div>
+            <div class="enemy-hp-display" id="enemyHpDisplay" aria-live="polite">
+                <span class="enemy-hp-name" id="enemyHpName">METTATON</span>
+                <span class="enemy-hp-bar"><span id="enemyHpFill"></span></span>
+            </div>
+        </div>
+
+        <!-- ===== ACTION BUTTONS ===== -->
+        <div class="action-bar" id="actionBar">
+            <button class="action-btn" id="fightBtn"><span class="heart-indicator">♥</span> ⚔ FIGHT</button>
+            <button class="action-btn" id="actBtn"><span class="heart-indicator">♥</span> 💬 ACT</button>
+            <button class="action-btn" id="itemBtn"><span class="heart-indicator">♥</span> 🎒 ITEM</button>
+            <button class="action-btn" id="mercyBtn"><span class="heart-indicator">♥</span> 💛 MERCY</button>
+        </div>
+
+        <!-- ===== HIDDEN OPTIONS ===== -->
+        <div class="options-grid" id="optionsContainer">
+            <button class="option-btn" data-index="0">A</button>
+            <button class="option-btn" data-index="1">B</button>
+            <button class="option-btn" data-index="2">C</button>
+            <button class="option-btn" data-index="3">D</button>
+        </div>
+
+        <!-- ===== STATUS PANEL ===== -->
+        <div class="status-panel">
+            <div class="status-left">
+                <span class="player-name" id="playerNameDisplay">HUMAN</span>
+                <span class="subject-display" id="subjectDisplay">📚 SELECCIONA</span>
+                <div class="hp-container">
+                    <span class="hp-label">❤</span>
+                    <div class="hp-bar-outer">
+                        <div class="hp-bar-inner" id="hpBarInner" style="width:100%"></div>
+                    </div>
+                    <span class="hp-text" id="hpText">20/20</span>
+                </div>
+            </div>
+            <div class="status-right">
+                <span class="rating-display" id="ratingDisplay">⭐ 0</span>
+                <span id="feedbackMessage">✨ QUIZ TIME</span>
+            </div>
+        </div>
+
+        <!-- ===== RESET ===== -->
+        <div class="reset-area">
+            <button id="resetBtn">↻ NEW SHOW</button>
+            <span class="key-hint">ARROWS · Z · X · R</span>
+        </div>
+    </div>
+
+    <!-- ============================================================
+    SCRIPT — FULL GAME LOGIC
+    ============================================================ -->
+    <script>
+        // ============================================================
+        // FULL GAME — METTATON QUIZ BATTLE + SUBJECTS + SECRETS
+        // ============================================================
+
+        // ---------- FILE LOADING FIX ----------
+        const isFileProtocol = window.location.protocol === 'file:';
+        const isLiveServer = window.location.hostname === '127.0.0.1' ||
+            window.location.hostname === 'localhost' ||
+            window.location.hostname.startsWith('192.168.') ||
+            window.location.hostname === '0.0.0.0';
+
+        // ---------- GLOBAL VARIABLES ----------
+        let playerName = 'HUMAN';
+        let selectedSubject = null;
+        let secretActive = null;
+        let secretMods = null;
+        let isTemmieMode = false;
+        let currentCharacterVoice = null;
+        let currentSoulColor = '#ff0000';
+        let currentSoulType = 'red';
+        let isSecretWithSubject = false;
+
+        // ---------- SOUL COLOR MAPPING ----------
+        const SOUL_COLORS = {
+            'red': { color: '#ff0000', glow: '#ff3333', shadow: 'rgba(255,0,0,0.8)', inverted: false },
+            'pink': { color: '#ff69b4', glow: '#ff88cc', shadow: 'rgba(255,105,180,0.8)', inverted: false },
+            'white': { color: '#ffffff', glow: '#ffffff', shadow: 'rgba(255,255,255,0.8)', inverted: true },
+            'purple': { color: '#9900ff', glow: '#bb66ff', shadow: 'rgba(153,0,255,0.8)', inverted: true },
+            'temmie': { color: '#ff66aa', glow: '#ff88cc', shadow: 'rgba(255,102,170,0.8)', inverted: false }
+        };
+
+        // ---------- AUDIO PATHS ----------
+        const basePath = isFileProtocol ? './' : '/';
+
+        // Image paths
+        const METTATON_SPRITE_SRC = isFileProtocol ?
+            'images/Mettaton_battle_box.png' :
+            '/images/Mettaton_battle_box.png';
+        const METTATON_EX_SPRITE_SRC = isFileProtocol ?
+            'images/mettaton_ex.png' :
+            '/images/mettaton_ex.png';
+        const MR_TENNA_SPRITE_SRC = isFileProtocol ?
+            'images/mr_tenna.png' :
+            '/images/mr_tenna.png';
+        const PAPYRUS_SPRITE_SRC = isFileProtocol ?
+            'images/papyrus.png' :
+            '/images/papyrus.png';
+        const TEMMIE_SPRITE_SRC = isFileProtocol ?
+            'images/temmie.png' :
+            '/images/temmie.png';
+        const TINA_SPRITE_SRC = isFileProtocol ?
+            'images/tina.png' :
+            '/images/tina.png';
+        const MARIE_SPRITE_SRC = isFileProtocol ?
+            'images/marie.png' :
+            '/images/marie.png';
+        const GERSON_SPRITE_SRC = isFileProtocol ?
+            'images/gerson.png' :
+            '/images/gerson.png';
+
+        // Music paths
+        const MUSIC_PATHS = {
+            default: isFileProtocol ? 'music/Rude Buster.mp3' : '/music/Rude Buster.mp3',
+            mettaton_ex: isFileProtocol ? 'music/Death by Glamour.mp3' : '/music/Death by Glamour.mp3',
+            tina_theme: isFileProtocol ? 'music/tina_theme.mp3' : '/music/tina_theme.mp3',
+            mr_tenna: isFileProtocol ? 'music/Mr Tenna Theme.mp3' : '/music/Mr Tenna Theme.mp3',
+            papyrus: isFileProtocol ? 'music/song_that_might_play_when_you_fight_sans.mp3' : '/music/song_that_might_play_when_you_fight_sans.mp3',
+            temmie: isFileProtocol ? 'music/tem_buster.mp3' : '/music/tem_buster.mp3',
+            gaster: isFileProtocol ? 'music/gaster_theme.mp3' : '/music/gaster_theme.mp3',
+            gerson: isFileProtocol ? 'music/gerson_theme.mp3' : '/music/gerson_theme.mp3'
+        };
+
+        // Voice paths
+        const VOICE_PATHS = {
+            mettaton: isFileProtocol ? 'sounds/mttspeech.mp3' : '/sounds/mttspeech.mp3',
+            mettaton_ex: isFileProtocol ? 'sounds/mttspeech.mp3' : '/sounds/mttspeech.mp3',
+            mr_tenna: isFileProtocol ? 'sounds/mr_tenna_voice.mp3' : '/sounds/mr_tenna_voice.mp3',
+            papyrus: isFileProtocol ? 'sounds/papyrus_voice.mp3' : '/sounds/papyrus_voice.mp3',
+            temmie: isFileProtocol ? 'sounds/temmie_voice.mp3' : '/sounds/temmie_voice.mp3',
+            gaster: isFileProtocol ? 'sounds/gaster_voice.mp3' : '/sounds/gaster_voice.mp3',
+            tina: isFileProtocol ? 'sounds/toriel_voice.mp3' : '/sounds/toriel_voice.mp3',
+            marie: isFileProtocol ? 'sounds/marie_voice.mp3' : '/sounds/marie_voice.mp3',
+            gerson: isFileProtocol ? 'sounds/gerson_voice.mp3' : '/sounds/gerson_voice.mp3'
+        };
+
+        // SFX paths
+        const HIT_SFX_SRC = isFileProtocol ? 'sounds/uthit.mp3' : '/sounds/uthit.mp3';
+        const HURT_SFX_SRC = isFileProtocol ? 'sounds/sdamage.mp3' : '/sounds/sdamage.mp3';
+        const SELECTION_SFX_SRC = isFileProtocol ? 'sounds/selection.mp3' : '/sounds/selection.mp3';
+        const CONFIRM_SFX_SRC = isFileProtocol ? 'sounds/confirm.mp3' : '/sounds/confirm.mp3';
+
+        // ---------- SUBJECT QUIZZES ----------
+        const SUBJECT_QUIZZES = {
+            'matematicas': [
+                { question: "¿CUÁNTO ES 7 × 8?", options: ["48", "56", "64", "72"], correct: 1 },
+                { question: "¿CUÁL ES EL ÁREA DE UN RECTÁNGULO DE 5×3?", options: ["8", "10", "15", "20"], correct: 2 },
+                { question: "¿CUÁL ES LA RAÍZ CUADRADA DE 81?", options: ["7", "8", "9", "10"], correct: 2 },
+                { question: "¿CUÁNTO ES 15 + 27?", options: ["32", "42", "52", "62"], correct: 1 },
+                { question: "¿CUÁL ES EL RESULTADO DE 144 ÷ 12?", options: ["10", "11", "12", "13"], correct: 2 },
+                { question: "¿CUÁL ES EL PERÍMETRO DE UN CUADRADO DE 6cm?", options: ["12cm", "18cm", "24cm", "36cm"],
+                    correct: 2 },
+                { question: "¿CUÁNTO ES 3⁴?", options: ["27", "54", "81", "108"], correct: 2 },
+                { question: "¿CUÁL ES EL MCD DE 12 Y 18?", options: ["3", "6", "9", "12"], correct: 1 }
+            ],
+            'lectura': [
+                { question: "¿QUÉ SIGNIFICA 'BRILLANTE'?", options: ["OSCURO", "LUMINOSO", "PEQUEÑO", "GRANDE"],
+                    correct: 1 },
+                { question: "¿CUÁL ES EL SINÓNIMO DE 'FELIZ'?", options: ["TRISTE", "ALEGRE", "ENOJADO", "CANSADO"],
+                    correct: 1 },
+                { question: "¿QUÉ ES UN SUSTANTIVO?", options: ["ACCIÓN", "PERSONA/LUGAR/COSA", "DESCRIPCIÓN",
+                        "CONJUNCIÓN"
+                    ], correct: 1 },
+                { question: "¿CUÁL ES EL ANTÓNIMO DE 'CALIENTE'?", options: ["FRÍO", "TIBIO", "QUEMADO", "SECO"],
+                    correct: 0 },
+                { question: "¿QUÉ ES UN VERBO?", options: ["ACCIÓN", "SUJETO", "ADJETIVO", "PRONOMBRE"], correct: 0 },
+                { question: "¿CUÁL ES EL PLURAL DE 'RATÓN'?", options: ["RATÓNES", "RATONES", "RATONOS", "RATONAS"],
+                    correct: 1 },
+                { question: "¿QUÉ PALABRA ES UN ADJETIVO?", options: ["CORRER", "ALTO", "MESA", "PERO"], correct: 1 },
+                { question: "¿CUÁL ES EL PRONOMBRE PERSONAL DE TERCERA PERSONA?", options: ["YO", "TÚ", "ÉL", "NOSOTROS"],
+                    correct: 2 }
+            ],
+            'ciencias': [
+                { question: "¿CUÁL ES EL PROCESO POR EL CUAL LAS PLANTAS PRODUCEN ALIMENTO?", options: ["RESPIRACIÓN",
+                        "FOTOSÍNTESIS", "DIGESTIÓN", "TRANSPIRACIÓN"
+                    ], correct: 1 },
+                { question: "¿CUÁL ES EL ELEMENTO MÁS ABUNDANTE EN LA ATMÓSFERA?", options: ["OXÍGENO", "NITRÓGENO",
+                        "DIÓXIDO DE CARBONO", "ARGÓN"
+                    ], correct: 1 },
+                { question: "¿CUÁL ES LA MOLÉCULA DEL AGUA?", options: ["H₂O", "CO₂", "NaCl", "HCl"], correct: 0 },
+                { question: "¿CUÁL ES EL ÓRGANO MÁS GRANDE DEL CUERPO HUMANO?", options: ["HÍGADO", "PULMÓN", "PIEL",
+                        "CEREBRO"
+                    ], correct: 2 },
+                { question: "¿CUÁNTOS HUESOS TIENE EL CUERPO HUMANO ADULTO?", options: ["106", "206", "306", "406"],
+                    correct: 1 },
+                { question: "¿QUÉ PLANETA ES CONOCIDO COMO 'PLANETA ROJO'?", options: ["VENUS", "MARTE", "JÚPITER",
+                        "SATURNO"
+                    ], correct: 1 },
+                { question: "¿CUÁL ES EL ESTADO DE LA MATERIA QUE NO TIENE FORMA FIJA?", options: ["SÓLIDO", "LÍQUIDO",
+                        "GASEOSO", "PLASMA"
+                    ], correct: 2 },
+                { question: "¿QUÉ FENÓMENO CAUSA EL MOVIMIENTO DE LAS PLACAS TECTÓNICAS?", options: ["VIENTOS",
+                        "CORRIENTES", "TERREMOTOS", "VOLCANES"
+                    ], correct: 2 }
+            ],
+            'historia': [
+                { question: "¿EN QUÉ AÑO LLEGÓ COLÓN A AMÉRICA?", options: ["1492", "1500", "1498", "1510"], correct: 0 },
+                { question: "¿QUIÉN FUE EL PRIMER PRESIDENTE DE MÉXICO?", options: ["BENITO JUÁREZ", "MIGUEL HIDALGO",
+                        "GUADALUPE VICTORIA", "PORFIRIO DÍAZ"
+                    ], correct: 2 },
+                { question: "¿CUÁL FUE LA CAUSA DE LA REVOLUCIÓN MEXICANA?", options: ["DESIGUALDAD SOCIAL",
+                        "INDEPENDENCIA", "REFORMA", "INVASIÓN"
+                    ], correct: 0 },
+                { question: "¿QUIÉN ESCRIBIÓ EL HIMNO NACIONAL MEXICANO?", options: ["BENITO JUÁREZ", "IGNACIO ALLENDE",
+                        "FRANCISCO GONZÁLEZ BOCANEGRA", "VICENTE GUERRERO"
+                    ], correct: 2 },
+                { question: "¿EN QUÉ AÑO FUE LA INDEPENDENCIA DE MÉXICO?", options: ["1810", "1821", "1820", "1815"],
+                    correct: 1 },
+                { question: "¿QUIÉN FUE EMPERADOR DE MÉXICO?", options: ["MAXIMILIANO", "ITURBIDE", "CARLOTA", "FERNANDO"],
+                    correct: 0 },
+                { question: "¿CUÁL FUE LA CULTURA MESOAMERICANA MÁS ANTIGUA?", options: ["MAYA", "AZTECA", "OLMECA",
+                        "TOLTECA"
+                    ], correct: 2 },
+                { question: "¿QUÉ SIGNIFICÓ LA CONSTITUCIÓN DE 1917?", options: ["INDEPENDENCIA", "REFORMA AGRARIA",
+                        "DERECHOS SOCIALES", "REVOLUCIÓN"
+                    ], correct: 2 }
+            ],
+            'geografia': [
+                { question: "¿CUÁL ES LA CAPITAL DE ESPAÑA?", options: ["MADRID", "BARCELONA", "VALENCIA", "SEVILLA"],
+                    correct: 0 },
+                { question: "¿CUÁL ES EL RÍO MÁS LARGO DEL MUNDO?", options: ["AMAZONAS", "NILO", "MISISIPI", "YANGTSÉ"],
+                    correct: 1 },
+                { question: "¿CUÁL ES EL PAÍS MÁS GRANDE DE AMÉRICA?", options: ["ESTADOS UNIDOS", "CANADÁ", "BRASIL",
+                        "MÉXICO"
+                    ], correct: 2 },
+                { question: "¿CUÁL ES LA MONTAÑA MÁS ALTA DEL MUNDO?", options: ["K2", "MONTE EVEREST", "MAUNA KEA",
+                        "ACONCAGUA"
+                    ], correct: 1 },
+                { question: "¿CUÁL ES LA CAPITAL DE JAPÓN?", options: ["SHANGHÁI", "SEÚL", "TOKIO", "PEKÍN"], correct: 2 },
+                { question: "¿CUÁL ES EL OCÉANO MÁS GRANDE?", options: ["ATLÁNTICO", "PACÍFICO", "ÍNDICO", "ÁRTICO"],
+                    correct: 1 },
+                { question: "¿EN QUÉ CONTINENTE ESTÁ EGIPTO?", options: ["ASIA", "EUROPA", "ÁFRICA", "AMÉRICA"],
+                    correct: 2 },
+                { question: "¿CUÁL ES LA CAPITAL DE AUSTRALIA?", options: ["SÍDNEY", "MELBOURNE", "CANBERRA", "PERTH"],
+                    correct: 2 }
+            ],
+            'computacion': [
+                { question: "¿QUÉ SIGNIFICA CPU?", options: ["UNIDAD DE PROCESO CENTRAL", "PROCESADOR DE DATOS",
+                        "CONTROL DE USUARIO", "PROGRAMA DE COMPUTADORA"
+                    ], correct: 0 },
+                { question: "¿CUÁL ES EL LENGUAJE DE PROGRAMACIÓN MÁS USADO PARA WEB?", options: ["PYTHON", "JAVA",
+                        "JAVASCRIPT", "C++"
+                    ], correct: 2 },
+                { question: "¿QUÉ ES UN ALGORITMO?", options: ["PROGRAMA", "PASOS PARA RESOLVER UN PROBLEMA",
+                        "LENGUAJE", "HARDWARE"
+                    ], correct: 1 },
+                { question: "¿QUÉ SIGNIFICA HTML?", options: ["LENGUAJE DE MARCAS DE HIPERTEXTO", "PROTOCOLO DE INTERNET",
+                        "PROGRAMA DE HOJA DE ESTILO", "SERVIDOR WEB"
+                    ], correct: 0 },
+                { question: "¿CUÁL ES LA DIFERENCIA ENTRE HARDWARE Y SOFTWARE?", options: ["HARDWARE ES FÍSICO",
+                        "SOFTWARE ES FÍSICO", "SON LO MISMO", "NO HAY DIFERENCIA"
+                    ], correct: 0 },
+                { question: "¿QUÉ ES UN BUG?", options: ["ERROR EN EL SOFTWARE", "VIRUS", "PROGRAMA", "HARDWARE"],
+                    correct: 0 },
+                { question: "¿CUÁL ES EL SISTEMA OPERATIVO MÁS USADO EN PC?", options: ["LINUX", "MACOS", "WINDOWS",
+                        "ANDROID"
+                    ], correct: 2 },
+                { question: "¿QUÉ SIGNIFICA URL?", options: ["UBICADOR DE RECURSOS UNIFORME", "PROTOCOLO DE INTERNET",
+                        "DIRECCIÓN WEB", "SITIO WEB"
+                    ], correct: 0 }
+            ],
+            'arte': [
+                { question: "¿CUÁLES SON LOS COLORES PRIMARIOS?", options: ["ROJO, AZUL, AMARILLO", "VERDE, NARANJA, VIOLETA",
+                        "ROJO, VERDE, AZUL", "AMARILLO, AZUL, VERDE"
+                    ], correct: 0 },
+                { question: "¿QUIÉN PINTÓ LA 'GIOCONDA'?", options: ["VAN GOGH", "LEONARDO DA VINCI", "PICASSO",
+                        "MICHELANGELO"
+                    ], correct: 1 },
+                { question: "¿QUÉ TÉCNICA DE PINTURA USA AGUA?", options: ["ÓLEO", "ACUARELA", "ACRÍLICO", "TEMPLA"],
+                    correct: 1 },
+                { question: "¿CUÁL ES EL ARTE DE DIBUJAR CON LÁPIZ?", options: ["PINTURA", "GRABADO", "DIBUJO", "ESCULTURA"],
+                    correct: 2 },
+                { question: "¿QUIÉN ES EL PINTOR DE 'LA NOCHE ESTRELLADA'?", options: ["VAN GOGH", "PICASSO", "DA VINCI",
+                        "MONET"
+                    ], correct: 0 },
+                { question: "¿QUÉ SON LOS PLANOS EN EL ARTE?", options: ["DISTANCIAS", "SUPERFICIES", "DIMENSIONES",
+                        "PROFUNDIDAD"
+                    ], correct: 3 },
+                { question: "¿CUÁL ES EL MOVIMIENTO ARTÍSTICO DE PICASSO?", options: ["RENACIMIENTO", "CUBISMO",
+                        "BARROCO", "IMPRESIONISMO"
+                    ], correct: 1 },
+                { question: "¿QUÉ ES UN MOSAICO?", options: ["PINTURA AL ÓLEO", "DIBUJO A LÁPIZ", "ARTE CON PIEZAS PEQUEÑAS",
+                        "ESCULTURA EN PIEDRA"
+                    ], correct: 2 }
+            ],
+            'musica': [
+                { question: "¿CUÁLES SON LAS NOTAS MUSICALES?", options: ["DO, RE, MI, FA, SOL, LA, SI", "A, B, C, D, E, F, G",
+                        "1,2,3,4,5,6,7", "DO, RE, MI, FA, SOL, LA, TI"
+                    ], correct: 0 },
+                { question: "¿QUÉ INSTRUMENTO TIENE TECLAS?", options: ["GUITARRA", "PIANO", "VIOLÍN", "FLAUTA"],
+                    correct: 1 },
+                { question: "¿QUIÉN FUE BEETHOVEN?", options: ["PINTOR", "COMPOSITOR", "ESCRITOR", "ACTOR"], correct: 1 },
+                { question: "¿CUÁL ES EL RITMO DE UN VALS?", options: ["2/4", "3/4", "4/4", "6/8"], correct: 1 },
+                { question: "¿QUÉ ES LA ESCALA MUSICAL?", options: ["SUCESIÓN DE NOTAS", "ACORDE", "RITMO", "MELODÍA"],
+                    correct: 0 },
+                { question: "¿CUÁL ES LA NOTA MÁS GRAVE?", options: ["DO", "RE", "SI", "LA"], correct: 2 },
+                { question: "¿QUÉ ES UN ACORDE?", options: ["UNA NOTA", "DOS NOTAS", "TRES O MÁS NOTAS", "RITMO"],
+                    correct: 2 },
+                { question: "¿CUÁL ES EL INSTRUMENTO MÁS ANTIGUO?", options: ["PIANO", "GUITARRA", "FLAUTA", "VIOLÍN"],
+                    correct: 2 }
+            ]
+        };
+
+        // ---------- BOSS QUIZZES (para secretos) ----------
+        const BOSS_QUIZZES = {
+            'MARIE': [
+                { question: "WHAT IS MARIE'S FAVORITE WEAPON?", options: ["CHARGER", "SPLATTERSHOT", "ROLLER",
+                        "SLOSHING MACHINE"
+                    ], correct: 0 },
+                { question: "WHO IS MARIE'S COUSIN?", options: ["CALLIE", "PEARL", "MARINA", "FRYE"], correct: 0 },
+                { question: "WHAT IS MARIE'S SIGNATURE COLOR?", options: ["GREEN", "PINK", "BLUE", "PURPLE"],
+                    correct: 0 },
+                { question: "WHAT IS MARIE'S CATCHPHRASE?", options: ["FRESH!", "BOOYAH!", "STAY FRESH!",
+                        "INKREDIBLE!"
+                    ], correct: 0 },
+                { question: "WHAT SPECIES IS MARIE?", options: ["INKLING", "OCTOLING", "JELLYFISH", "SALMONID"],
+                    correct: 0 },
+                { question: "WHAT IS MARIE'S FAVORITE FOOD?", options: ["SUSHI", "BURGER", "PIZZA", "ICE CREAM"],
+                    correct: 0 }
+            ],
+            'GERSON': [
+                { question: "WHAT IS GERSON'S WEAPON?", options: ["HAMMER", "SWORD", "AXE", "SPEAR"], correct: 0 },
+                { question: "HOW OLD IS GERSON?", options: ["100 YEARS", "500 YEARS", "1000 YEARS", "3000 YEARS"],
+                    correct: 2 },
+                { question: "WHAT SPECIES IS GERSON?", options: ["TURTLE", "FROG", "LIZARD", "SNAKE"], correct: 0 },
+                { question: "WHAT IS GERSON KNOWN AS?", options: ["THE LEGEND", "THE HERO", "THE KING", "THE WISE"],
+                    correct: 0 },
+                { question: "WHAT DOES GERSON SAY?", options: ["NYEH HEH!", "HAMMER OF JUSTICE!", "FRESH!",
+                        "BOOYAH!"
+                    ], correct: 1 },
+                { question: "WHO DOES GERSON FIGHT?", options: ["SUSIE", "KRIS", "RALSEI", "THE PLAYER"], correct: 0 }
+            ],
+            'PAPYRUS': [
+                { question: "WHAT IS PAPYRUS'S FAVORITE FOOD?", options: ["SPAGHETTI", "PIZZA", "BURGER", "TACOS"],
+                    correct: 0 },
+                { question: "WHAT IS PAPYRUS'S CATCHPHRASE?", options: ["NYEH HEH HEH!", "WOWIE!", "COOL DUDE!",
+                        "ALL OF ABOVE"
+                    ], correct: 3 },
+                { question: "WHO IS PAPYRUS'S BROTHER?", options: ["SANS", "GASTER", "ASRIEL", "FLOWEY"], correct: 0 },
+                { question: "WHAT IS PAPYRUS'S DREAM?", options: ["JOIN THE ROYAL GUARD", "BE A CHEF",
+                        "BE A SINGER", "BE A PILOT"
+                    ], correct: 0 },
+                { question: "WHAT DOES PAPYRUS LOVE?", options: ["PUZZLES", "PASTA", "HUMANS", "ALL OF ABOVE"],
+                    correct: 3 },
+                { question: "WHAT IS PAPYRUS'S SPECIAL ATTACK?", options: ["BONE ATTACK", "GASTER BLASTER",
+                        "JUSTICE HAMMER", "SPAGHETTI BOMB"
+                    ], correct: 0 },
+                { question: "WHO DOES PAPYRUS WANT TO CAPTURE?", options: ["HUMANS", "MONSTERS", "FLOWERS", "FISH"],
+                    correct: 0 }
+            ],
+            'METTATON_EX': [
+                { question: "WHAT IS METTATON'S FAVORITE COLOR?", options: ["PINK", "GOLD", "BLUE", "RAINBOW"],
+                    correct: 0 },
+                { question: "WHAT IS METTATON'S HUMAN FORM CALLED?", options: ["METTATON EX", "METTATON NEO",
+                        "METTATON X", "METTATON PRIME"
+                    ], correct: 0 },
+                { question: "WHAT DOES METTATON LOVE MOST?", options: ["DRAMA", "FASHION", "ROBOTS", "ALL OF ABOVE"],
+                    correct: 3 },
+                { question: "METTATON'S SHOWS ARE ABOUT...", options: ["ROBOTS", "DRAMA", "FASHION", "ALL OF ABOVE"],
+                    correct: 3 },
+                { question: "WHAT IS METTATON'S CATCHPHRASE?", options: ["OHHH YES!", "FABULOUS!", "DARLING!",
+                        "ALL OF ABOVE"
+                    ], correct: 3 },
+                { question: "WHO IS METTATON'S CREATOR?", options: ["ALPHYS", "SANS", "PAPYRUS", "UNDYNE"],
+                    correct: 0 },
+                { question: "WHAT IS METTATON'S BATTLE THEME?", options: ["DEATH BY GLAMOUR", "BONETROUSLE",
+                        "SPIDER DANCE", "GHOUL'S THEME"
+                    ], correct: 0 }
+            ],
+            'MR_TENNA': [
+                { question: "WHAT IS MR TENNA'S MEDIUM?", options: ["TELEVISION", "RADIO", "NEWSPAPER", "INTERNET"],
+                    correct: 0 },
+                { question: "WHAT DOES MR TENNA SAY?", options: ["IT'S TV TIME!", "CUT! CUT!", "RATINGS!",
+                        "ALL OF ABOVE"
+                    ], correct: 3 },
+                { question: "WHAT IS MR TENNA'S ROLE?", options: ["TV HOST", "NEWS ANCHOR", "ACTOR", "DIRECTOR"],
+                    correct: 0 },
+                { question: "WHAT DOES MR TENNA LOVE?", options: ["RATINGS", "DRAMA", "TV SHOWS", "ALL OF ABOVE"],
+                    correct: 3 },
+                { question: "WHAT SPECIES IS MR TENNA?", options: ["ROBOT", "HUMAN", "MONSTER", "GHOST"], correct: 0 },
+                { question: "WHAT DOES MR TENNA SAY WHEN HE'S MAD?", options: ["CANCELLED!", "FIRED!", "CUT!",
+                        "ALL OF ABOVE"
+                    ], correct: 3 },
+                { question: "WHAT IS MR TENNA'S THEME?", options: ["TV TIME", "RATINGS BOOST", "SHOW MUST GO ON",
+                        "ALL OF ABOVE"
+                    ], correct: 3 },
+                { question: "WHERE DOES MR TENNA WORK?", options: ["TV STATION", "RADIO STATION", "NEWSPAPER",
+                        "MOVIE THEATER"
+                    ], correct: 0 },
+                { question: "WHAT DOES MR TENNA WEAR?", options: ["SUIT", "T-SHIRT", "HOODIE", "ROBOT ARMOR"],
+                    correct: 0 },
+                { question: "WHAT IS MR TENNA'S CATCHPHRASE?", options: ["IT'S TV TIME!", "WELCOME TO THE SHOW!",
+                        "RATINGS ARE UP!", "ALL OF ABOVE"
+                    ], correct: 3 }
+            ],
+            'TEMMIE': [
+                { question: "WHAT DOES TEMMIE SAY?", options: ["TEM!", "TEM FLAME!", "TEM ATTACK!", "ALL OF ABOVE"],
+                    correct: 3 },
+                { question: "WHAT IS TEMMIE'S COLOR?", options: ["PINK", "BLUE", "GREEN", "YELLOW"], correct: 0 },
+                { question: "WHAT DOES TEMMIE WANT?", options: ["MONEY", "FOOD", "FRIENDS", "ALL OF ABOVE"],
+                    correct: 3 },
+                { question: "WHAT SPECIES IS TEMMIE?", options: ["TEMMIE", "CAT", "DOG", "BIRD"], correct: 0 },
+                { question: "WHAT IS TEMMIE'S SPECIAL ATTACK?", options: ["TEM FLAME", "TEM BITE", "TEM DANCE",
+                        "ALL OF ABOVE"
+                    ], correct: 3 },
+                { question: "WHAT DOES TEMMIE LOVE?", options: ["TEM", "FIGHTING", "EATING", "SLEEPING"], correct: 0 },
+                { question: "WHAT IS TEMMIE'S SHOP CALLED?", options: ["TEMMIE SHOP", "TEMMIE VILLAGE",
+                        "TEMMIE LAND", "TEMMIE TOWN"
+                    ], correct: 0 }
+            ],
+            'TINA': [
+                { question: "WHO IS THE DEVELOPER?", options: ["TINA", "TOBY", "FOX", "GAME"], correct: 0 },
+                { question: "WHAT DOES TINA SAY?", options: ["ERROR!", "DEBUG!", "DELETE!", "ALL OF ABOVE"],
+                    correct: 3 },
+                { question: "WHAT IS TINA'S ROLE?", options: ["DEVELOPER", "TESTER", "DESIGNER", "ALL OF ABOVE"],
+                    correct: 3 },
+                { question: "WHAT DOES TINA LOVE?", options: ["CODING", "GAMES", "BUGS", "ALL OF ABOVE"],
+                    correct: 3 },
+                { question: "WHAT IS TINA'S CATCHPHRASE?", options: ["YOU'RE NOT SUPPOSED TO BE HERE!",
+                        "SYSTEM OVERRIDE!", "TIME TO DEBUG!", "ALL OF ABOVE"
+                    ], correct: 3 },
+                { question: "WHAT DOES TINA DO?", options: ["MAKE GAMES", "BREAK GAMES", "FIX GAMES", "ALL OF ABOVE"],
+                    correct: 3 },
+                { question: "WHAT IS TINA'S POWER?", options: ["ADMIN", "DEV", "GOD", "ALL OF ABOVE"], correct: 3 }
+            ]
+        };
+
+        // ---------- CUSTOM DIALOGUES FOR EACH BOSS ----------
+        const BOSS_DIALOGUES = {
+            'MARIE': {
+                taunts: [
+                    "FRESH! FRESH! FRESH!",
+                    "STAY OFF THE HOOK, SQUID!",
+                    "YOU'RE ALL WET!",
+                    "CAN'T HANDLE THE FRESHNESS?",
+                    "INKREDIBLE! YOU'RE PATHETIC!"
+                ],
+                correct: "FRESH! YOU PASSED!",
+                wrong: "BOOOORING! TRY AGAIN, SQUID!",
+                victory: "YOU'RE STILL FRESH! I'LL GIVE YOU THAT!",
+                defeat: "BOOYAH! I WIN! STAY FRESH!"
+            },
+            'GERSON': {
+                taunts: [
+                    "I'VE LIVED A THOUSAND YEARS!",
+                    "THIS OLD TURTLE STILL HAS IT!",
+                    "HAMMER OF JUSTICE!",
+                    "YOU CAN'T BEAT THE LEGEND!",
+                    "I'VE SEEN KIDS LIKE YOU BEFORE!"
+                ],
+                correct: "A WORTHY OPPONENT!",
+                wrong: "TOO SLOW, KID!",
+                victory: "THE LEGEND LIVES ON!",
+                defeat: "MY TIME HAS COME... GOODBYE, KID."
+            },
+            'PAPYRUS': {
+                taunts: [
+                    "NYEH HEH HEH!",
+                    "I AM THE GREAT PAPYRUS!",
+                    "PREPARE FOR MY SPECIAL ATTACK!",
+                    "YOU CAN'T HANDLE MY PUZZLES!",
+                    "I'LL CAPTURE YOU, HUMAN!"
+                ],
+                correct: "WOWIE! YOU'RE PRETTY GOOD!",
+                wrong: "NYEH HEH! I WIN!",
+                victory: "UNDYNE WILL BE SO PROUD!",
+                defeat: "I... I CAN'T BELIEVE IT..."
+            },
+            'METTATON_EX': {
+                taunts: [
+                    "OHHHH YES!",
+                    "THIS IS MY SHOW!",
+                    "BEAUTIFUL! STUNNING! AMAZING!",
+                    "I'M THE STAR!",
+                    "YOU CAN'T BEAT PERFECTION!"
+                ],
+                correct: "FABULOUS PERFORMANCE!",
+                wrong: "BOO! YOU'RE TERRIBLE!",
+                victory: "THE SHOW MUST GO ON!",
+                defeat: "NO... MY CAREER... RUINED!"
+            },
+            'MR_TENNA': {
+                taunts: [
+                    "IT'S TV TIME!",
+                    "SIT DOWN AND WATCH!",
+                    "YOU'RE ON MY CHANNEL NOW!",
+                    "RATINGS ARE THROUGH THE ROOF!",
+                    "MY SHOW, MY RULES!"
+                ],
+                correct: "WHAT A PLOT TWIST!",
+                wrong: "CUT! CUT! YOU'RE AWFUL!",
+                victory: "AND THAT'S A WRAP!",
+                defeat: "CANCELLED! NOOOOO!"
+            },
+            'TEMMIE': {
+                taunts: [
+                    "TEM!",
+                    "TEMMIE IS STRONG!",
+                    "TEM FLAME!",
+                    "TEM ATTACK!",
+                    "TEMMIE WANT TO FIGHT!"
+                ],
+                correct: "TEM! YOU WON!",
+                wrong: "TEM! TEM! TEM!",
+                victory: "TEM IS VICTORY!",
+                defeat: "TEM... LOSE... SAD..."
+            },
+            'TINA': {
+                taunts: [
+                    "YOU'RE NOT SUPPOSED TO BE HERE!",
+                    "I'M THE DEVELOPER!",
+                    "THIS IS MY WORLD!",
+                    "TIME TO DEBUG!",
+                    "DELETE! DELETE! DELETE!"
+                ],
+                correct: "IMPRESSIVE... BUT NOT ENOUGH!",
+                wrong: "ERROR! UNEXPECTED BEHAVIOR!",
+                victory: "SYSTEM OVERRIDE! I WIN!",
+                defeat: "YOU... BROKE THE GAME..."
+            },
+            'default': {
+                taunts: [
+                    "¿OH? ¿QUIERES PELEAR, DARLING?",
+                    "¡TANTA VIOLENCIA! ¡ME ENCANTA EN CÁMARA!",
+                    "¿NO ESTAMOS LLENOS DE SORPRESAS HOY?",
+                    "ADELANTE — ¡HAZLO DRAMÁTICO!"
+                ],
+                correct: "¡CORRECTO! ¡FABULOSO!",
+                wrong: "¡INCORRECTO! ¡INTENTA DE NUEVO, DARLING!",
+                victory: "¡QUÉ ESPECTÁCULO! ¡FABULOSO!",
+                defeat: "¡NO! ¡ESTO NO PUEDE SER!"
+            }
+        };
+
+        // ---------- DOM REFS ----------
+        const canvas = document.getElementById('battleCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const nameModal = document.getElementById('nameModal');
+        const nameInput = document.getElementById('nameInput');
+        const nameSubmit = document.getElementById('nameSubmit');
+        const playerNameDisplay = document.getElementById('playerNameDisplay');
+        const subjectDisplay = document.getElementById('subjectDisplay');
+
+        const subjectModal = document.getElementById('subjectModal');
+        const subjectGrid = document.getElementById('subjectGrid');
+
+        const textContent = document.getElementById('textContent');
+        const textMessage = document.getElementById('textMessage');
+        const textLabel = document.getElementById('textLabel');
+        const textCursor = document.getElementById('textCursor');
+        const textboxHeart = document.getElementById('textboxHeart');
+        const enemyHpDisplay = document.getElementById('enemyHpDisplay');
+        const enemyHpName = document.getElementById('enemyHpName');
+        const enemyHpFill = document.getElementById('enemyHpFill');
+
+        const optionsBtns = document.querySelectorAll('.option-btn');
+        const actionBtns = document.querySelectorAll('.action-btn');
+        const fightBtn = document.getElementById('fightBtn');
+        const actBtn = document.getElementById('actBtn');
+        const itemBtn = document.getElementById('itemBtn');
+        const mercyBtn = document.getElementById('mercyBtn');
+
+        const hpBarInner = document.getElementById('hpBarInner');
+        const hpText = document.getElementById('hpText');
+        const ratingDisplay = document.getElementById('ratingDisplay');
+        const feedbackEl = document.getElementById('feedbackMessage');
+        const resetBtn = document.getElementById('resetBtn');
+
+        // Canvas dimensions
+        const CW = 800,
+            CH = 450;
+
+        // ---------- BATTLE BOX ----------
+        const BOX = { x: 60, y: 150, w: 680, h: 240 };
+        const SOUL_MARGIN = 12;
+
+        // ---------- SPRITE SYSTEM ----------
+        const sprites = {
+            mettaton: new Image(),
+            mettaton_ex: new Image(),
+            mr_tenna: new Image(),
+            papyrus: new Image(),
+            temmie: new Image(),
+            tina: new Image(),
+            marie: new Image(),
+            gerson: new Image()
+        };
+
+        let currentSprite = null;
+        let spriteLoaded = false;
+        let allSpritesLoaded = false;
+
+        function loadAllSprites() {
+            const spritePaths = {
+                mettaton: METTATON_SPRITE_SRC,
+                mettaton_ex: METTATON_EX_SPRITE_SRC,
+                mr_tenna: MR_TENNA_SPRITE_SRC,
+                papyrus: PAPYRUS_SPRITE_SRC,
+                temmie: TEMMIE_SPRITE_SRC,
+                tina: TINA_SPRITE_SRC,
+                marie: MARIE_SPRITE_SRC,
+                gerson: GERSON_SPRITE_SRC
+            };
+
+            let loadedCount = 0;
+            const totalSprites = Object.keys(spritePaths).length;
+
+            for (const [key, path] of Object.entries(spritePaths)) {
+                sprites[key] = new Image();
+                sprites[key].onload = () => {
+                    loadedCount++;
+                    console.log(`✅ Sprite loaded: ${key}`);
+                    if (loadedCount === totalSprites) {
+                        allSpritesLoaded = true;
+                        spriteLoaded = true;
+                        currentSprite = sprites.mettaton;
+                        console.log('✅ All sprites loaded!');
+                    }
+                };
+                sprites[key].onerror = () => {
+                    console.warn(`⚠️ Failed to load sprite: ${key} from ${path}`);
+                    loadedCount++;
+                    if (loadedCount === totalSprites) {
+                        allSpritesLoaded = true;
+                        spriteLoaded = true;
+                        currentSprite = sprites.mettaton;
+                        console.log('⚠️ Using fallback sprites (some may not load)');
+                    }
+                };
+                sprites[key].src = path;
+                console.log(`📁 Loading sprite: ${key} from ${path}`);
+            }
+        }
+
+        function setSprite(spriteKey) {
+            const spriteMap = {
+                'mettaton': sprites.mettaton,
+                'mettaton_ex': sprites.mettaton_ex,
+                'mr_tenna': sprites.mr_tenna,
+                'papyrus': sprites.papyrus,
+                'temmie': sprites.temmie,
+                'tina': sprites.tina,
+                'marie': sprites.marie,
+                'gerson': sprites.gerson
+            };
+
+            if (spriteMap[spriteKey] && spriteMap[spriteKey].complete && spriteMap[spriteKey].naturalWidth > 0) {
+                currentSprite = spriteMap[spriteKey];
+                console.log(`🖼️ Sprite changed to: ${spriteKey}`);
+            } else {
+                currentSprite = sprites.mettaton;
+                console.warn(`⚠️ Sprite ${spriteKey} not loaded, using default`);
+            }
+        }
+
+        loadAllSprites();
+
+        // ---------- AUDIO SYSTEM ----------
+        const BG_MUSIC_SRC = MUSIC_PATHS;
+        const VOICE_SOUNDS = VOICE_PATHS;
+
+        const bgMusic = new Audio();
+        bgMusic.loop = true;
+        bgMusic.volume = 0.5;
+        bgMusic.src = BG_MUSIC_SRC.default;
+        bgMusic.onerror = function() {
+            console.warn('⚠️ Background music failed to load:', BG_MUSIC_SRC.default);
+        };
+
+        const voiceBlip = new Audio();
+        voiceBlip.loop = false;
+        voiceBlip.src = VOICE_SOUNDS.mettaton;
+        voiceBlip.onerror = function() {
+            console.warn('⚠️ Voice blip failed to load:', VOICE_SOUNDS.mettaton);
+        };
+
+        const hitSfx = new Audio();
+        hitSfx.src = HIT_SFX_SRC;
+        hitSfx.onerror = function() {
+            console.warn('⚠️ Hit SFX failed to load:', HIT_SFX_SRC);
+        };
+
+        const hurtSfx = new Audio();
+        hurtSfx.src = HURT_SFX_SRC;
+        hurtSfx.onerror = function() {
+            console.warn('⚠️ Hurt SFX failed to load:', HURT_SFX_SRC);
+        };
+
+        const selectionSfx = new Audio();
+        selectionSfx.loop = false;
+        selectionSfx.src = SELECTION_SFX_SRC;
+        selectionSfx.onerror = function() {
+            console.warn('⚠️ Selection SFX failed to load:', SELECTION_SFX_SRC);
+        };
+
+        const confirmSfx = new Audio();
+        confirmSfx.loop = false;
+        confirmSfx.src = CONFIRM_SFX_SRC;
+        confirmSfx.onerror = function() {
+            console.warn('⚠️ Confirm SFX failed to load:', CONFIRM_SFX_SRC);
+        };
+
+        // ---------- VOICE CONTROL ----------
+        let isMettatonSpeaking = false;
+        let musicStarted = false;
+        let currentBossDialogue = 'default';
+
+        function setCharacterMusic(characterKey) {
+            const musicMap = {
+                'mettaton': BG_MUSIC_SRC.default,
+                'mettaton_ex': BG_MUSIC_SRC.mettaton_ex,
+                'mr_tenna': BG_MUSIC_SRC.mr_tenna,
+                'papyrus': BG_MUSIC_SRC.papyrus,
+                'temmie': BG_MUSIC_SRC.temmie,
+                'gaster': BG_MUSIC_SRC.gaster,
+                'gerson': BG_MUSIC_SRC.gerson,
+                'tina': BG_MUSIC_SRC.tina_theme,
+                'tina_theme': BG_MUSIC_SRC.tina_theme
+            };
+
+            const musicPath = musicMap[characterKey];
+            if (musicPath) {
+                const wasPlaying = !bgMusic.paused;
+                bgMusic.src = musicPath;
+                bgMusic.loop = true;
+                bgMusic.load();
+                if (wasPlaying || musicStarted) {
+                    bgMusic.play().catch(() => {});
+                }
+                console.log(`🎵 Music changed to: ${characterKey} (${musicPath})`);
+            } else {
+                bgMusic.src = BG_MUSIC_SRC.default;
+                console.warn(`⚠️ No music found for ${characterKey}, using default`);
+            }
+        }
+
+        function setCharacterVoice(characterKey) {
+            const voiceMap = {
+                'mettaton': VOICE_SOUNDS.mettaton,
+                'mettaton_ex': VOICE_SOUNDS.mettaton_ex,
+                'mr_tenna': VOICE_SOUNDS.mr_tenna,
+                'papyrus': VOICE_SOUNDS.papyrus,
+                'temmie': VOICE_SOUNDS.temmie,
+                'gaster': VOICE_SOUNDS.gaster,
+                'tina': VOICE_SOUNDS.tina,
+                'marie': VOICE_SOUNDS.marie,
+                'gerson': VOICE_SOUNDS.gerson
+            };
+
+            const voicePath = voiceMap[characterKey];
+            if (voicePath) {
+                voiceBlip.src = voicePath;
+                voiceBlip.load();
+                currentCharacterVoice = characterKey;
+                console.log(`🔊 Voice changed to: ${characterKey} (${voicePath})`);
+            } else {
+                voiceBlip.src = VOICE_SOUNDS.mettaton;
+                console.warn(`⚠️ No voice found for ${characterKey}, using default Mettaton voice`);
+            }
+        }
+
+        function setSoulColor(soulType) {
+            const soulConfig = SOUL_COLORS[soulType] || SOUL_COLORS['red'];
+            currentSoulColor = soulConfig.color;
+            currentSoulType = soulType;
+            state.soulColor = soulConfig;
+            console.log(`💖 Soul color changed to: ${soulType} (${soulConfig.color})`);
+        }
+
+        function setBossDialogue(bossName) {
+            const dialogueMap = {
+                'MARIE': BOSS_DIALOGUES.MARIE,
+                'GERSON': BOSS_DIALOGUES.GERSON,
+                'PAPYRUS': BOSS_DIALOGUES.PAPYRUS,
+                'METTATON EX': BOSS_DIALOGUES.METTATON_EX,
+                'MR TENNA': BOSS_DIALOGUES.MR_TENNA,
+                'TEMMIE': BOSS_DIALOGUES.TEMMIE,
+                'TINA': BOSS_DIALOGUES.TINA
+            };
+
+            const normalizedName = bossName ? bossName.toUpperCase() : '';
+            let matchedKey = null;
+
+            for (const [key, _] of Object.entries(dialogueMap)) {
+                if (normalizedName.includes(key) || key.includes(normalizedName)) {
+                    matchedKey = key;
+                    break;
+                }
+            }
+
+            if (matchedKey && dialogueMap[matchedKey]) {
+                currentBossDialogue = matchedKey;
+                console.log(`💬 Dialogue set to: ${matchedKey}`);
+            } else {
+                currentBossDialogue = 'default';
+                console.log(`💬 No specific dialogue for ${bossName}, using default`);
+            }
+        }
+
+        function getBossTaunt() {
+            const dialogue = BOSS_DIALOGUES[currentBossDialogue] || BOSS_DIALOGUES.default;
+            const taunts = dialogue.taunts || BOSS_DIALOGUES.default.taunts;
+            return taunts[Math.floor(Math.random() * taunts.length)];
+        }
+
+        function getBossCorrect() {
+            const dialogue = BOSS_DIALOGUES[currentBossDialogue] || BOSS_DIALOGUES.default;
+            return dialogue.correct || BOSS_DIALOGUES.default.correct;
+        }
+
+        function getBossWrong() {
+            const dialogue = BOSS_DIALOGUES[currentBossDialogue] || BOSS_DIALOGUES.default;
+            return dialogue.wrong || BOSS_DIALOGUES.default.wrong;
+        }
+
+        function getBossVictory() {
+            const dialogue = BOSS_DIALOGUES[currentBossDialogue] || BOSS_DIALOGUES.default;
+            return dialogue.victory || BOSS_DIALOGUES.default.victory;
+        }
+
+        function getBossDefeat() {
+            const dialogue = BOSS_DIALOGUES[currentBossDialogue] || BOSS_DIALOGUES.default;
+            return dialogue.defeat || BOSS_DIALOGUES.default.defeat;
+        }
+
+        function getBossQuiz(bossName) {
+            const quizMap = {
+                'METTATON': SUBJECT_QUIZZES[selectedSubject] || SUBJECT_QUIZZES.matematicas,
+                'METTATON EX': BOSS_QUIZZES.METTATON_EX,
+                'MARIE': BOSS_QUIZZES.MARIE,
+                'GERSON': BOSS_QUIZZES.GERSON,
+                'PAPYRUS': BOSS_QUIZZES.PAPYRUS,
+                'MR TENNA': BOSS_QUIZZES.MR_TENNA,
+                'TEMMIE': BOSS_QUIZZES.TEMMIE,
+                'TINA': BOSS_QUIZZES.TINA
+            };
+
+            const normalizedName = bossName ? bossName.toUpperCase() : '';
+            let matchedKey = 'METTATON';
+
+            for (const [key, _] of Object.entries(quizMap)) {
+                if (normalizedName.includes(key) || key.includes(normalizedName)) {
+                    matchedKey = key;
+                    break;
+                }
+            }
+
+            return quizMap[matchedKey] || SUBJECT_QUIZZES[selectedSubject] || SUBJECT_QUIZZES.matematicas;
+        }
+
+        function playVoiceBlip() {
+            if (!voiceBlip.src) return;
+            voiceBlip.currentTime = 0;
+            voiceBlip.play().catch(() => {});
+        }
+
+        function startVoiceBlips() {
+            if (isMettatonSpeaking) return;
+            isMettatonSpeaking = true;
+            playVoiceBlip();
+            scheduleNextBlip();
+        }
+
+        function scheduleNextBlip() {
+            if (!isMettatonSpeaking) return;
+            voiceBlip.onended = function() {
+                if (isMettatonSpeaking) {
+                    playVoiceBlip();
+                    scheduleNextBlip();
+                }
+                voiceBlip.onended = null;
+            };
+            setTimeout(() => {
+                if (isMettatonSpeaking && !voiceBlip.paused) {
+                    // Still playing, wait
+                } else if (isMettatonSpeaking) {
+                    playVoiceBlip();
+                }
+            }, 500);
+        }
+
+        function stopVoiceBlips() {
+            isMettatonSpeaking = false;
+            if (voiceBlip) {
+                voiceBlip.pause();
+                voiceBlip.currentTime = 0;
+            }
+            voiceBlip.onended = null;
+        }
+
+        function scheduleVoiceStop(duration) {
+            setTimeout(() => {
+                stopVoiceBlips();
+            }, duration);
+        }
+
+        function playSfx(audio) {
+            if (!audio.src) return;
+            audio.currentTime = 0;
+            audio.play().catch(() => {});
+        }
+
+        function tryStartMusic() {
+            if (musicStarted) return;
+            musicStarted = true;
+            bgMusic.play().catch(() => {
+                console.log('🎵 Music autoplay blocked, waiting for user interaction...');
+            });
+        }
+
+        // ---------- SECRET DEFINITIONS ----------
+        const SECRETS = {
+            'tina': {
+                variations: ['tina', 'Tina', 'TINA', 'toe', 'Toe', 'TOE'],
+                check: (name) => {
+                    if (name === 'TINA' || name === 'TOE') {
+                        const isToe = name === 'TOE';
+                        
+                        if (isLiveServer) {
+                            return {
+                                hp: 99999,
+                                maxHp: 99999,
+                                message: isToe ? '🦉 TOE VS MARIE!' : '🦉 DEMON QUEEN TINA VS MARIE!',
+                                mode: 'tina',
+                                theme: 'tina-theme',
+                                label: isToe ? '🦉 TOE' : '🦉 TINA',
+                                sprite: 'marie',
+                                enemyName: 'MARIE',
+                                enemyHp: 100,
+                                voice: 'marie',
+                                music: 'tina_theme',
+                                soul: 'pink',
+                                bossDialogue: 'MARIE',
+                                bossQuiz: 'MARIE',
+                                hasSubjectSelector: false
+                            };
+                        } else {
+                            return {
+                                hp: 9999,
+                                maxHp: 9999,
+                                message: isToe ? '🦉 DEV MODE: TOE VS MARIE' : '🦉 DEV MODE: TINA VS MARIE',
+                                mode: 'tina',
+                                theme: 'tina-theme',
+                                label: isToe ? '🦉 TOE' : '🦉 TINA',
+                                sprite: 'marie',
+                                enemyName: 'MARIE',
+                                enemyHp: 100,
+                                voice: 'marie',
+                                music: 'tina_theme',
+                                soul: 'pink',
+                                bossDialogue: 'MARIE',
+                                bossQuiz: 'MARIE',
+                                hasSubjectSelector: false
+                            };
+                        }
+                    }
+                    return null;
+                }
+            },
+            'susie': {
+                variations: ['susie', 'Susie', 'SUSIE'],
+                check: (name) => {
+                    if (name === 'SUSIE') {
+                        return {
+                            hp: 290,
+                            maxHp: 290,
+                            mode: 'susie',
+                            enemyName: 'GERSON',
+                            enemyHp: 1500,
+                            title: "SUSIE VS GERSON",
+                            message: '🐊 SUSIE VS GERSON! CHAPTER 4 BATTLE! KRIS\'S SOUL GUIDES SUSIE!',
+                            hardMode: true,
+                            attackMultiplier: 1.4,
+                            bulletSpeed: 1.3,
+                            waveCount: 2,
+                            bulletCount: 8,
+                            label: '🐊 SUSIE',
+                            theme: 'susie-theme',
+                            sprite: 'gerson',
+                            voice: 'gerson',
+                            music: 'gerson',
+                            soul: 'red',
+                            bossDialogue: 'GERSON',
+                            bossQuiz: 'GERSON',
+                            hasSubjectSelector: false
+                        };
+                    }
+                    return null;
+                }
+            },
+            'chara': {
+                variations: ['chara', 'Chara', 'CHARA'],
+                check: (name) => {
+                    if (name === 'CHARA') {
+                        return {
+                            hp: 99,
+                            maxHp: 99,
+                            mode: 'chara',
+                            enemyName: 'METTATON EX',
+                            enemyHp: 60,
+                            message: '💀 LV 20 · METTATON EX MODE',
+                            hardMode: true,
+                            attackMultiplier: 1.5,
+                            bulletSpeed: 1.5,
+                            waveCount: 2,
+                            bulletCount: 10,
+                            label: '📺 METTATON EX',
+                            title: 'Mettaton EX · Quiz',
+                            theme: 'chara-theme',
+                            sprite: 'mettaton_ex',
+                            voice: 'mettaton_ex',
+                            music: 'mettaton_ex',
+                            soul: 'red',
+                            bossDialogue: 'METTATON_EX',
+                            bossQuiz: 'METTATON_EX',
+                            hasSubjectSelector: true
+                        };
+                    }
+                    return null;
+                }
+            },
+            'kris': {
+                variations: ['kris', 'Kris', 'KRIS'],
+                check: (name) => {
+                    if (name === 'KRIS') {
+                        return {
+                            hp: 240,
+                            maxHp: 240,
+                            mode: 'kris',
+                            enemyName: 'MR TENNA',
+                            enemyHp: 1200,
+                            title: "Mr Tenna's Quiz",
+                            message: '📺 MR TENNA · DELTARUNE MODE',
+                            hardMode: true,
+                            attackMultiplier: 1.8,
+                            bulletSpeed: 1.4,
+                            damageMultiplier: 1.5,
+                            waveCount: 2,
+                            bulletCount: 9,
+                            label: '📺 MR TENNA',
+                            theme: 'tenna-theme',
+                            sprite: 'mr_tenna',
+                            voice: 'mr_tenna',
+                            music: 'mr_tenna',
+                            soul: 'red',
+                            bossDialogue: 'MR TENNA',
+                            bossQuiz: 'MR TENNA',
+                            hasSubjectSelector: false
+                        };
+                    }
+                    return null;
+                }
+            },
+            'frisk': {
+                variations: ['frisk', 'Frisk', 'FRISK'],
+                check: (name) => {
+                    if (name === 'FRISK') {
+                        return {
+                            mode: 'frisk',
+                            message: '⚔ HARD MODE ACTIVATED',
+                            hardMode: true,
+                            attackMultiplier: 1.6,
+                            bulletSpeed: 1.6,
+                            waveCount: 2,
+                            bulletCount: 9,
+                            enemyHp: 18,
+                            label: '📺 HARD MODE',
+                            theme: 'hard-mode',
+                            sprite: 'mettaton',
+                            voice: 'mettaton',
+                            music: 'mettaton',
+                            soul: 'red',
+                            bossDialogue: 'default',
+                            bossQuiz: 'METTATON',
+                            hasSubjectSelector: true
+                        };
+                    }
+                    return null;
+                }
+            },
+            'sans': {
+                variations: ['sans', 'Sans', 'SANS'],
+                check: (name) => {
+                    if (name === 'SANS') {
+                        return {
+                            mode: 'sans',
+                            enemyName: 'PAPYRUS',
+                            enemyHp: 25,
+                            title: "PAPYRUS'S QUIZ SHOW",
+                            message: '💀 NYEH HEH HEH! PAPYRUS IS HERE!',
+                            hardMode: true,
+                            attackMultiplier: 1.7,
+                            bulletSpeed: 1.7,
+                            waveCount: 2,
+                            bulletCount: 8,
+                            label: '💀 PAPYRUS',
+                            theme: 'papyrus-theme',
+                            sprite: 'papyrus',
+                            voice: 'papyrus',
+                            music: 'papyrus',
+                            soul: 'white',
+                            bossDialogue: 'PAPYRUS',
+                            bossQuiz: 'PAPYRUS',
+                            hasSubjectSelector: false
+                        };
+                    }
+                    return null;
+                }
+            },
+            'gaster': {
+                variations: ['gaster', 'Gaster', 'GASTER', 'gAstEr'],
+                check: (name) => {
+                    if (name === 'GASTER') {
+                        if (isFileProtocol) {
+                            return {
+                                hp: 6666,
+                                maxHp: 6666,
+                                mode: 'gaster',
+                                enemyName: 'TINA',
+                                enemySprite: 'tina',
+                                enemyHp: 99999,
+                                title: "GASTER'S QUIZ",
+                                message: '👻  ...  ...  ...  GASTER IS HERE',
+                                hardMode: true,
+                                attackMultiplier: 2.0,
+                                bulletSpeed: 1.8,
+                                waveCount: 2,
+                                bulletCount: 12,
+                                damageMultiplier: 2.0,
+                                label: '👻 GASTER',
+                                theme: 'gaster-theme',
+                                sprite: 'mettaton',
+                                voice: 'tina',
+                                music: 'gaster',
+                                soul: 'purple',
+                                bossTheme: 'tina-boss-theme',
+                                bossDialogue: '"YOU\'RE NOT SUPPOSED TO BE HERE BUDDY!" - TINA',
+                                bossDialogueKey: 'TINA',
+                                bossQuiz: 'TINA',
+                                hasSubjectSelector: false
+                            };
+                        } else {
+                            localStorage.setItem('gaster_encounter', 'true');
+                            location.reload();
+                            return null;
+                        }
+                    }
+                    return null;
+                }
+            },
+            'temmie': {
+                variations: ['temmie', 'Temmie', 'TEMMIE', 'tEmMiE', 'tem'],
+                check: (name) => {
+                    if (name === 'TEMMIE' || name === 'TEM') {
+                        return {
+                            hp: 20,
+                            maxHp: 20,
+                            mode: 'temmie',
+                            enemyName: 'TEMMIE',
+                            enemyHp: 10,
+                            title: "TEMMIE'S QUIZ",
+                            message: '🐱 TEMMIE TOOK OVER!',
+                            buttonPrefix: 'TEM',
+                            hardMode: false,
+                            attackMultiplier: 0.5,
+                            bulletSpeed: 0.7,
+                            waveCount: 1,
+                            bulletCount: 4,
+                            label: '🐱 TEMMIE',
+                            theme: 'temmie-theme',
+                            sprite: 'temmie',
+                            voice: 'temmie',
+                            music: 'temmie',
+                            isTemmie: true,
+                            soul: 'temmie',
+                            bossDialogue: 'TEMMIE',
+                            bossQuiz: 'TEMMIE',
+                            hasSubjectSelector: false
+                        };
+                    }
+                    return null;
+                }
+            }
+        };
+
+        // ---------- SECRET FUNCTIONS ----------
+        let currentQuizData = [];
+        let currentQuizIndex = 0;
+        let currentQuizOrder = [];
+
+        function getBossQuizData(bossName) {
+            const quiz = getBossQuiz(bossName);
+            return quiz || SUBJECT_QUIZZES[selectedSubject] || SUBJECT_QUIZZES.matematicas;
+        }
+
+        function initBossQuiz(bossName) {
+            const quiz = getBossQuiz(bossName);
+            currentQuizData = quiz || SUBJECT_QUIZZES[selectedSubject] || SUBJECT_QUIZZES.matematicas;
+            const indices = currentQuizData.map((_, i) => i);
+            currentQuizOrder = shuffleArray([...indices]);
+            currentQuizIndex = 0;
+            state.totalQuestions = currentQuizData.length;
+            console.log(`📋 Quiz initialized for ${bossName} with ${state.totalQuestions} questions`);
+        }
+
+        function checkForSecret(name) {
+            const upperName = name.trim().toUpperCase();
+            for (const [key, config] of Object.entries(SECRETS)) {
+                for (const variant of config.variations) {
+                    if (upperName === variant.toUpperCase()) {
+                        const result = config.check(upperName);
+                        if (result) {
+                            return { ...result, triggered: key };
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
+        function applySecretModifications(mods) {
+            if (!mods) return;
+
+            if (mods.isTemmie) {
+                isTemmieMode = true;
+            } else {
+                isTemmieMode = false;
+            }
+
+            if (mods.soul) {
+                setSoulColor(mods.soul);
+            } else {
+                setSoulColor('red');
+            }
+
+            if (mods.hasSubjectSelector) {
+                isSecretWithSubject = true;
+            } else {
+                isSecretWithSubject = false;
+            }
+
+            if (mods.bossDialogue) {
+                setBossDialogue(mods.bossDialogue);
+            } else if (mods.enemyName) {
+                setBossDialogue(mods.enemyName);
+            } else {
+                setBossDialogue('default');
+            }
+
+            if (mods.mode === 'gaster' && mods.enemySprite) {
+                setSprite(mods.enemySprite);
+                state.enemy.name = mods.enemyName;
+                state.enemy.hp = mods.enemyHp;
+                state.enemy.maxHp = mods.enemyHp;
+                if (mods.bossTheme) {
+                    document.body.classList.add(mods.bossTheme);
+                }
+                if (mods.bossDialogue) {
+                    setTimeout(() => {
+                        setText('⚠️ TINA', mods.bossDialogue);
+                    }, 500);
+                }
+                if (mods.bossDialogueKey) {
+                    setBossDialogue(mods.bossDialogueKey);
+                }
+            } else {
+                if (mods.sprite) {
+                    setSprite(mods.sprite);
+                }
+                if (mods.enemyName) {
+                    state.enemy.name = mods.enemyName;
+                }
+                if (mods.enemyHp !== undefined) {
+                    state.enemy.hp = mods.enemyHp;
+                    state.enemy.maxHp = mods.enemyHp;
+                }
+            }
+
+            if (mods.voice) {
+                setCharacterVoice(mods.voice);
+            }
+
+            if (mods.music) {
+                setCharacterMusic(mods.music);
+            }
+
+            if (mods.hp !== undefined) {
+                state.hp = mods.hp;
+                state.maxHp = mods.maxHp || mods.hp;
+                updateHPUI();
+            }
+
+            if (mods.hardMode) state.hardMode = true;
+            if (mods.attackMultiplier) state.attackMultiplier = mods.attackMultiplier;
+            if (mods.bulletSpeed) state.bulletSpeed = mods.bulletSpeed;
+            if (mods.waveCount) state.waveCount = mods.waveCount;
+            if (mods.bulletCount) state.bulletCount = mods.bulletCount;
+            if (mods.damageMultiplier) state.damageMultiplier = mods.damageMultiplier;
+
+            if (mods.title) document.title = mods.title;
+            if (mods.label) {
+                textLabel.textContent = mods.label + ' ';
+                state.textLabel = mods.label;
+            }
+
+            if (mods.buttonPrefix) {
+                document.querySelectorAll('.action-btn').forEach(btn => {
+                    const text = btn.textContent.trim();
+                    if (text.includes('⚔')) btn.innerHTML =
+                        `<span class="heart-indicator">♥</span> ${mods.buttonPrefix} ⚔`;
+                    if (text.includes('💬')) btn.innerHTML =
+                        `<span class="heart-indicator">♥</span> ${mods.buttonPrefix} 💬`;
+                    if (text.includes('🎒')) btn.innerHTML =
+                        `<span class="heart-indicator">♥</span> ${mods.buttonPrefix} 🎒`;
+                    if (text.includes('💛')) btn.innerHTML =
+                        `<span class="heart-indicator">♥</span> ${mods.buttonPrefix} 💛`;
+                });
+            }
+
+            if (mods.theme) {
+                document.body.classList.add(mods.theme);
+                const textbox = document.getElementById('textbox');
+                if (textbox) {
+                    if (mods.theme === 'temmie-theme') {
+                        textbox.style.borderColor = '#ff66aa';
+                        textbox.style.background = '#ffccdd';
+                    } else if (mods.theme === 'chara-theme') {
+                        textbox.style.borderColor = '#ff0000';
+                    } else if (mods.theme === 'tenna-theme') {
+                        textbox.style.borderColor = '#ffcc00';
+                    } else if (mods.theme === 'papyrus-theme') {
+                        textbox.style.borderColor = '#ff4444';
+                    } else if (mods.theme === 'hard-mode') {
+                        textbox.style.borderColor = '#ff6600';
+                    } else if (mods.theme === 'tina-theme') {
+                        textbox.style.borderColor = '#ff69b4';
+                    } else if (mods.theme === 'gaster-theme') {
+                        textbox.style.borderColor = '#6600ff';
+                        textbox.style.background = '#0a0018';
+                        textLabel.style.color = '#9900ff';
+                        textLabel.style.textShadow = '0 0 20px #9900ff';
+                    } else if (mods.theme === 'susie-theme') {
+                        textbox.style.borderColor = '#cc4444';
+                    }
+                }
+            }
+
+            if (mods.message) {
+                setText('⚠️ SECRET', mods.message);
+            }
+
+            updateUI();
+        }
+
+        // ---------- STATE ----------
+        let state = {
+            hp: 20,
+            maxHp: 20,
+            rating: 0,
+            gameOver: false,
+            disabled: false,
+            questionOrder: [],
+            questionIndex: 0,
+            totalQuestions: 8,
+            answered: false,
+
+            menuIndex: 0,
+            menuActive: true,
+            actionConfirmed: false,
+            focusOnButtons: true,
+
+            battleSoul: { x: 100, y: 350, size: 14, invincible: false },
+            invincibleTimer: 0,
+            enemy: { x: CW / 2, y: 70, hp: 12, maxHp: 12, name: 'METTATON', pulse: 0 },
+            mettatonBubble: { active: false, text: '' },
+            slashEffect: { active: false, timer: 0, duration: 18 },
+            bullets: [],
+            attackTimer: 0,
+            attackPhase: false,
+            waveTimer: 0,
+            wavesLeft: 0,
+            fightMode: false,
+            fightStage: null,
+            fightBar: null,
+            actMode: false,
+            actTargets: [],
+
+            keys: { up: false, down: false, left: false, right: false, z: false, x: false },
+
+            hardMode: false,
+            attackMultiplier: 1,
+            bulletSpeed: 1,
+            waveCount: 1,
+            bulletCount: 6,
+            damageMultiplier: 1,
+            textLabel: '📺 METTATON',
+            soulColor: { color: '#ff0000', glow: '#ff3333', shadow: 'rgba(255,0,0,0.8)', inverted: false }
+        };
+
+        const MENU_ACTIONS = ['fight', 'act', 'item', 'mercy'];
+
+        // ---------- HELPERS ----------
+        function shuffleArray(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function initQuestionOrder() {
+            const indices = currentQuizData.map((_, i) => i);
+            state.questionOrder = shuffleArray([...indices]);
+            state.questionIndex = 0;
+        }
+
+        function getCurrentQuestionData() {
+            const idx = state.questionOrder[state.questionIndex];
+            return currentQuizData[idx];
+        }
+
+        // ---------- UI UPDATES ----------
+        function updateHPUI() {
+            const percent = (state.hp / state.maxHp) * 100;
+            hpBarInner.style.width = Math.max(0, percent) + '%';
+
+            if (isTemmieMode) {
+                hpText.textContent = `tem ${state.hp}/${state.maxHp}`;
+                hpText.classList.add('temmie-hp');
+            } else {
+                hpText.textContent = `${state.hp}/${state.maxHp}`;
+                hpText.classList.remove('temmie-hp');
+            }
+        }
+
+        function updateRatingUI() {
+            ratingDisplay.textContent = `⭐ ${state.rating}`;
+        }
+
+        function resetMenuState() {
+            state.menuActive = true;
+            state.focusOnButtons = true;
+            state.actionConfirmed = false;
+            state.menuIndex = 0;
+            updateUI();
+        }
+
+        // ---------- SUBJECT SELECTOR ----------
+        function showSubjectSelector() {
+            subjectModal.classList.add('active');
+        }
+
+        function hideSubjectSelector() {
+            subjectModal.classList.remove('active');
+        }
+
+        function selectSubject(subject) {
+            selectedSubject = subject;
+            hideSubjectSelector();
+
+            const subjectNames = {
+                'matematicas': '📐 MATEMÁTICAS',
+                'lectura': '📖 LECTURA',
+                'ciencias': '🔬 CIENCIAS',
+                'historia': '🌍 HISTORIA',
+                'geografia': '🗺️ GEOGRAFÍA',
+                'computacion': '💻 COMPUTACIÓN',
+                'arte': '🎨 ARTE',
+                'musica': '🎵 MÚSICA'
+            };
+            subjectDisplay.textContent = subjectNames[subject] || '📚 SELECCIONA';
+
+            if (isSecretWithSubject) {
+                currentQuizData = SUBJECT_QUIZZES[subject] || SUBJECT_QUIZZES.matematicas;
+            } else {
+                currentQuizData = SUBJECT_QUIZZES[subject] || SUBJECT_QUIZZES.matematicas;
+            }
+
+            state.totalQuestions = currentQuizData.length;
+            initQuestionOrder();
+
+            if (isSecretWithSubject) {
+                setText(state.textLabel || '📺 METTATON', `¡BIENVENIDO, DARLING! VAMOS A REFORZAR ${subjectNames[subject].toUpperCase()}`);
+                setFeedback(`📚 ${subjectNames[subject]} · ${state.textLabel || 'METTATON'}`);
+            } else {
+                setBossDialogue('default');
+                setSprite('mettaton');
+                setCharacterVoice('mettaton');
+                setCharacterMusic('mettaton');
+                setSoulColor('red');
+                state.enemy.name = 'METTATON';
+                state.enemy.hp = 12;
+                state.enemy.maxHp = 12;
+                state.textLabel = '📺 METTATON';
+                textLabel.textContent = '📺 METTATON ';
+                setText('📺 METTATON', `¡BIENVENIDO, DARLING! VAMOS A REFORZAR ${subjectNames[subject].toUpperCase()}`);
+                setFeedback(`📚 ${subjectNames[subject]}`);
+            }
+
+            loadQuestion();
+            updateUI();
+            tryStartMusic();
+        }
+
+        // ---------- TEXTBOX ----------
+        function setText(label, msg) {
+            const displayLabel = state.textLabel || label;
+            textLabel.textContent = displayLabel + ' ';
+            textMessage.textContent = msg;
+            state.showingOptions = false;
+            state.focusOnButtons = true;
+            document.querySelectorAll('.answer-option').forEach(el => el.remove());
+            textCursor.style.display = 'inline-block';
+            textboxHeart.classList.remove('active');
+
+            if (label.includes('METTATON') || label.includes('💬 ACT') || label.includes('📺 METTATON') || label.includes(
+                    '⚠️ SECRET') || label.includes('TINA') || label.includes('MARIE') || label.includes('SUSIE') || label
+                .includes('GERSON')) {
+                startVoiceBlips();
+                const textLength = msg.length;
+                const baseDuration = 600;
+                const perCharDuration = 180;
+                const duration = Math.max(baseDuration, textLength * perCharDuration + 300);
+                scheduleVoiceStop(duration);
+            } else {
+                stopVoiceBlips();
+            }
+            updateUI();
+        }
+
+        function setFeedback(msg) {
+            feedbackEl.textContent = msg;
+        }
+
+        function updateEnemyHpDisplay(visible) {
+            const enemyName = state.enemy.name || 'METTATON';
+            const maxHp = state.enemy.maxHp || 1;
+            const hpRatio = Math.max(0, Math.min(1, state.enemy.hp / maxHp));
+            enemyHpDisplay.classList.toggle('active', visible);
+            enemyHpName.textContent = enemyName;
+            enemyHpFill.style.width = `${hpRatio * 100}%`;
+        }
+
+        // ---------- NAME INPUT ----------
+        function startGameWithName() {
+            const name = nameInput.value.trim().toUpperCase() || 'HUMAN';
+            playerName = name.slice(0, 8);
+            playerNameDisplay.textContent = playerName;
+
+            const secretResult = checkForSecret(name);
+            if (secretResult) {
+                secretActive = secretResult.triggered;
+                secretMods = secretResult;
+                console.log('🔑 SECRET ACTIVATED:', secretResult.triggered);
+                nameModal.style.display = 'none';
+
+                applySecretModifications(secretResult);
+
+                if (secretResult.hasSubjectSelector) {
+                    showSubjectSelector();
+                } else {
+                    initBossQuiz(secretResult.bossQuiz || secretResult.enemyName || 'METTATON');
+                    initQuestionOrder();
+                    canvas.focus();
+                    tryStartMusic();
+                }
+                return;
+            }
+
+            nameModal.style.display = 'none';
+            isSecretWithSubject = false;
+            showSubjectSelector();
+            canvas.focus();
+        }
+
+        nameSubmit.addEventListener('click', startGameWithName);
+        nameInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                startGameWithName();
+            }
+        });
+
+        // ---------- SUBJECT BUTTON EVENTS ----------
+        subjectGrid.addEventListener('click', (e) => {
+            const btn = e.target.closest('.subject-btn');
+            if (btn) {
+                const subject = btn.dataset.subject;
+                selectSubject(subject);
+            }
+        });
+
+        // ---------- ACT MODE ----------
+        function startActMode() {
+            if (state.gameOver || state.answered) return;
+
+            const qData = getCurrentQuestionData();
+            state.actMode = true;
+            state.focusOnButtons = true;
+            textCursor.style.display = 'inline-block';
+            textboxHeart.classList.remove('active');
+
+            state.battleSoul.x = BOX.x + BOX.w / 2;
+            state.battleSoul.y = BOX.y + BOX.h - 26;
+
+            const labels = ['A', 'B', 'C', 'D'];
+            const positions = [
+                { x: BOX.x + BOX.w * 0.27, y: BOX.y + BOX.h * 0.34 },
+                { x: BOX.x + BOX.w * 0.73, y: BOX.y + BOX.h * 0.34 },
+                { x: BOX.x + BOX.w * 0.27, y: BOX.y + BOX.h * 0.74 },
+                { x: BOX.x + BOX.w * 0.73, y: BOX.y + BOX.h * 0.74 }
+            ];
+            state.actTargets = qData.options.map((option, index) => ({
+                x: positions[index].x,
+                y: positions[index].y,
+                r: 54,
+                label: labels[index] + '. ' + option,
+                index
+            }));
+
+            textLabel.textContent = '💬 ACT ';
+            textMessage.textContent = ' MUEVE EL ALMA Y PRESIONA Z EN TU RESPUESTA!';
+            setFeedback('💬 ¡ELIGE SABIAMENTE, DARLING!');
+            state.mettatonBubble = { active: true, text: qData.question };
+
+            startVoiceBlips();
+            const duration = Math.max(600, qData.question.length * 180 + 300);
+            scheduleVoiceStop(duration);
+
+            updateUI();
+        }
+
+        function selectActTarget() {
+            if (!state.actMode || state.disabled || state.gameOver) return;
+            const soul = state.battleSoul;
+            const hitTarget = state.actTargets.find(t => {
+                const dx = soul.x - t.x,
+                    dy = soul.y - t.y;
+                return Math.sqrt(dx * dx + dy * dy) < t.r;
+            });
+            if (!hitTarget) {
+                setFeedback('💬 ¡ACÉRCATE MÁS A UNA RESPUESTA!');
+                return;
+            }
+            state.actMode = false;
+            state.actTargets = [];
+            stopVoiceBlips();
+            handleAnswer(hitTarget.index);
+        }
+
+        // ---------- UI UPDATE ----------
+        function updateUI() {
+            updateHPUI();
+            updateRatingUI();
+
+            if (state.gameOver) {
+                if (state.hp <= 0) {
+                    setFeedback('💔 GAME OVER... METTATON GANA.');
+                } else if (state.rating >= 7) {
+                    setFeedback('🌟 ¡LEGENDARIO! ¡METTATON APRUEBA!');
+                } else if (state.rating >= 4) {
+                    setFeedback('👍 ¡BUEN TRABAJO, DARLING!');
+                } else {
+                    setFeedback('📺 ¡MEJOR SUERTE LA PRÓXIMA VEZ!');
+                }
+                actionBtns.forEach(btn => btn.disabled = true);
+                textboxHeart.classList.remove('active');
+                stopVoiceBlips();
+            } else {
+                setFeedback(`📺 P${state.questionIndex + 1}/${state.totalQuestions}`);
+                actionBtns.forEach(btn => btn.disabled = state.disabled || state.attackPhase || state.fightMode || state
+                    .actMode);
+            }
+
+            optionsBtns.forEach(btn => btn.disabled = state.disabled || state.gameOver || state.attackPhase);
+
+            actionBtns.forEach((btn, i) => {
+                const isActive = i === state.menuIndex && state.focusOnButtons && state.menuActive && !state.actMode &&
+                    !state.fightMode;
+                btn.classList.toggle('active', isActive);
+            });
+        }
+
+        // ---------- LOAD QUESTION ----------
+        function loadQuestion() {
+            if (state.gameOver) return;
+            if (state.questionIndex >= state.totalQuestions) {
+                state.gameOver = true;
+                state.disabled = true;
+                const victoryMsg = getBossVictory();
+                setText('🏁 ¡QUIZ COMPLETADO!', ' ' + victoryMsg);
+                optionsBtns.forEach(btn => btn.disabled = true);
+                actionBtns.forEach(btn => btn.disabled = true);
+                updateUI();
+                return;
+            }
+
+            const qData = getCurrentQuestionData();
+            const taunt = getBossTaunt();
+            const label = state.textLabel || '📺 METTATON';
+            setText(label, qData.question + '  (' + taunt + ')');
+            state.answered = false;
+            state.disabled = false;
+            state.showingOptions = false;
+            state.actMode = false;
+            state.actTargets = [];
+            state.fightMode = false;
+            state.fightStage = null;
+            state.fightBar = null;
+            state.menuActive = true;
+            state.focusOnButtons = true;
+            state.menuIndex = 0;
+            state.battleSoul.invincible = false;
+            state.invincibleTimer = 0;
+            state.mettatonBubble.active = false;
+            textboxHeart.classList.remove('active');
+
+            state.battleSoul.x = CW / 2;
+            state.battleSoul.y = CH / 2;
+
+            updateUI();
+        }
+
+        // ---------- HANDLE ANSWER ----------
+        function handleAnswer(selectedIndex) {
+            if (state.disabled || state.gameOver || state.answered) return;
+            if (state.questionIndex >= state.totalQuestions) return;
+
+            const qData = getCurrentQuestionData();
+            const isCorrect = (selectedIndex === qData.correct);
+
+            state.actionConfirmed = false;
+            state.actMode = false;
+            state.actTargets = [];
+            state.mettatonBubble.active = false;
+            stopVoiceBlips();
+
+            state.answered = true;
+            state.disabled = true;
+            state.menuActive = false;
+            state.focusOnButtons = true;
+            textboxHeart.classList.remove('active');
+
+            if (isCorrect) {
+                state.rating += 1;
+                state.hp = Math.min(state.maxHp, state.hp + 2);
+                const correctMsg = getBossCorrect();
+                setText('✅ ¡CORRECTO!', ' ' + correctMsg);
+                setFeedback('✅ ' + correctMsg);
+                startAttack(260, 4);
+            } else {
+                const damage = Math.max(1, Math.floor(3 + Math.random() * 3));
+                state.hp = Math.max(0, state.hp - damage);
+                const wrongMsg = getBossWrong();
+                setText('❌ ¡INCORRECTO!', ' ' + wrongMsg + ' -' + damage + ' HP');
+                setFeedback(`❌ -${damage} HP`);
+                startAttack(340, 6);
+            }
+
+            updateUI();
+
+            if (state.hp <= 0) {
+                state.gameOver = true;
+                state.disabled = true;
+                const defeatMsg = getBossDefeat();
+                setText('💀 ¡CANCELADO!', ' ' + defeatMsg);
+                optionsBtns.forEach(btn => btn.disabled = true);
+                actionBtns.forEach(btn => btn.disabled = true);
+                updateUI();
+                return;
+            }
+
+            setTimeout(() => {
+                if (!state.gameOver) {
+                    state.attackPhase = false;
+                    state.bullets = [];
+                    state.questionIndex++;
+                    loadQuestion();
+                }
+            }, isCorrect ? 4600 : 6000);
+        }
+
+        // ---------- ATTACK PATTERNS ----------
+        function spawnBullets(count) {
+            const actualCount = state.bulletCount || count;
+            const speedMod = state.bulletSpeed || 1;
+
+            const bullets = [];
+            const cx = BOX.x + BOX.w / 2,
+                cy = BOX.y + 24;
+            for (let i = 0; i < actualCount; i++) {
+                const angle = (i / actualCount) * Math.PI * 2 + Math.random() * 0.3;
+                const speed = (1.6 + Math.random() * 1.1) * speedMod;
+                bullets.push({
+                    x: cx + Math.cos(angle) * 20,
+                    y: cy + Math.sin(angle) * 20,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    r: 6 + Math.random() * 4,
+                    active: true
+                });
+            }
+            state.bullets.push(...bullets);
+        }
+
+        function spawnRain(count) {
+            const actualCount = state.bulletCount || count;
+            const speedMod = state.bulletSpeed || 1;
+
+            for (let i = 0; i < actualCount; i++) {
+                state.bullets.push({
+                    x: BOX.x + 20 + Math.random() * (BOX.w - 40),
+                    y: BOX.y + 6,
+                    vx: (Math.random() - 0.5) * 0.6,
+                    vy: (1.6 + Math.random() * 1.3) * speedMod,
+                    r: 6 + Math.random() * 4,
+                    active: true
+                });
+            }
+        }
+
+        function spawnSweep(count) {
+            const actualCount = state.bulletCount || count;
+            const speedMod = state.bulletSpeed || 1;
+            const fromLeft = Math.random() < 0.5;
+            const startY = BOX.y + 20 + Math.random() * (BOX.h - 40);
+            for (let i = 0; i < actualCount; i++) {
+                state.bullets.push({
+                    x: fromLeft ? BOX.x + 6 : BOX.x + BOX.w - 6,
+                    y: startY + (i - actualCount / 2) * 22,
+                    vx: (fromLeft ? 1 : -1) * (1.7 + Math.random() * 0.8) * speedMod,
+                    vy: (Math.random() - 0.5) * 0.4,
+                    r: 6 + Math.random() * 3,
+                    active: true
+                });
+            }
+        }
+
+        function startAttack(totalFrames, waveCount) {
+            const actualWaveCount = state.waveCount ? waveCount * state.waveCount : waveCount;
+
+            state.attackPhase = true;
+            state.attackTimer = totalFrames;
+            state.wavesLeft = actualWaveCount;
+            state.waveTimer = 0;
+        }
+
+        function fireNextWave() {
+            const patterns = [spawnBullets, spawnRain, spawnSweep];
+            const pattern = patterns[Math.floor(Math.random() * patterns.length)];
+            pattern(pattern === spawnBullets ? 6 : 5);
+            state.wavesLeft--;
+        }
+
+        // ---------- HANDLE ACTION CONFIRMATION ----------
+        function confirmAction() {
+            if (state.disabled || state.gameOver || state.attackPhase) return;
+            if (!state.menuActive || state.actionConfirmed) return;
+
+            playSfx(confirmSfx);
+
+            const action = MENU_ACTIONS[state.menuIndex];
+            state.actionConfirmed = true;
+            state.menuActive = false;
+
+            switch (action) {
+                case 'fight':
+                    startFightSelect();
+                    break;
+                case 'act':
+                    startActMode();
+                    break;
+                case 'item':
+                    setText('🎒 ITEM', ' NO TIENES OBJETOS.');
+                    setFeedback('🎒 VACÍO');
+                    state.menuActive = true;
+                    state.actionConfirmed = false;
+                    setTimeout(() => {
+                        if (!state.gameOver) {
+                            state.menuActive = true;
+                            updateUI();
+                        }
+                    }, 1000);
+                    break;
+                case 'mercy':
+                    const mercyMessages = [
+                        "¡¿MISERICORDIA?! ¡YO SOY UN ROBOT, DARLING!",
+                        "¡NO NECESITO MISERICORDIA! ¡NECESITO RATINGS!",
+                        "¿MISERICORDIA? ¡ESTE ES UN QUIZ, NO UNA TELENOVELA!",
+                        "¡OH! ¡QUÉ DRAMÁTICO! ¡PERO NO FUNCIONARÁ!",
+                        "¡MISERICORDIA! ¡JAJAJA! ¡ERES DIVERTIDO, HUMANO!",
+                        "¡LO SIENTO, DARLING! ¡MI PROGRAMA NO INCLUYE MISERICORDIA!"
+                    ];
+                    const randomMercy = mercyMessages[Math.floor(Math.random() * mercyMessages.length)];
+                    setText('💛 MISERICORDIA', ' ' + randomMercy);
+                    setFeedback('💛 ' + randomMercy);
+                    state.menuActive = true;
+                    state.actionConfirmed = false;
+                    setTimeout(() => {
+                        if (!state.gameOver) {
+                            state.menuActive = true;
+                            updateUI();
+                        }
+                    }, 1500);
+                    break;
+            }
+            updateUI();
+        }
+
+        // ---------- FIGHT ----------
+        function startFightSelect() {
+            state.fightMode = true;
+            state.fightStage = 'select';
+            state.menuActive = false;
+            state.focusOnButtons = true;
+            textCursor.style.display = 'none';
+            document.querySelectorAll('.answer-option').forEach(el => el.remove());
+
+            const enemyName = state.enemy.name || 'METTATON';
+            textLabel.textContent = '⚔ PELEA ';
+            textMessage.textContent = '';
+            updateEnemyHpDisplay(true);
+
+            const targetEl = document.createElement('span');
+            targetEl.className = 'answer-option active';
+            targetEl.innerHTML = `<span class="option-heart">♥</span> * ${enemyName}`;
+            targetEl.addEventListener('click', () => confirmFightTarget());
+            textContent.appendChild(targetEl);
+
+            const taunt = getBossTaunt();
+            setFeedback(`⚔ PRESIONA Z PARA ELEGIR TU OBJETIVO  (${taunt})`);
+
+            state.mettatonBubble = { active: true, text: taunt };
+
+            startVoiceBlips();
+            const duration = Math.max(500, taunt.length * 180 + 300);
+            scheduleVoiceStop(duration);
+
+            updateUI();
+        }
+
+        function confirmFightTarget() {
+            if (state.fightStage !== 'select') return;
+            playSfx(confirmSfx);
+            document.querySelectorAll('.answer-option').forEach(el => el.remove());
+            startFightBar();
+        }
+
+        function startFightBar() {
+            state.fightStage = 'bar';
+            const barWidth = BOX.w - 120;
+            state.fightBar = {
+                x: BOX.x + 60,
+                w: barWidth,
+                y: BOX.y + BOX.h / 2,
+                h: 24,
+                pos: 0,
+                dir: 1,
+                speed: 6 + state.rating * 0.3,
+                zoneCenter: barWidth * (0.4 + Math.random() * 0.2),
+                zoneHalfWidth: 30
+            };
+            textCursor.style.display = 'inline-block';
+            const taunt = getBossTaunt();
+            setText('⚔ ¡PELEA!', ' ¡PRESIONA Z CUANDO LA BARRA SE ALINEE!');
+            setFeedback(`⚔ ¡CALCULA BIEN EL TIEMPO, DARLING!  (${taunt})`);
+        }
+
+        function resolveFightBar() {
+            if (state.fightStage !== 'bar' || !state.fightBar) return;
+
+            playSfx(confirmSfx);
+
+            const bar = state.fightBar;
+            const dist = Math.abs(bar.pos - bar.zoneCenter);
+            let damage, label, msg, feedback;
+
+            if (dist <= bar.zoneHalfWidth * 0.3) {
+                damage = Math.floor((7 + Math.random() * 2) * state.attackMultiplier);
+                label = '💥 ¡CRÍTICO!';
+                msg = ' ¡GOLPE CRÍTICO!! ' + getBossTaunt();
+                feedback = '💥 ¡GOLPE CRÍTICO!';
+            } else if (dist <= bar.zoneHalfWidth) {
+                damage = Math.floor((4 + Math.random() * 2) * state.attackMultiplier);
+                label = '💥 ¡GOLPE!';
+                msg = ' ¡BUEN GOLPE! ' + getBossTaunt();
+                feedback = '💥 ¡BUEN GOLPE!';
+            } else if (dist <= bar.zoneHalfWidth * 2) {
+                damage = Math.floor((2 + Math.random() * 2) * state.attackMultiplier);
+                label = '💥 ROZANDO';
+                msg = ' LO ROZASTE... ' + getBossTaunt();
+                feedback = '💥 ROZANDO';
+            } else {
+                damage = 0;
+                label = '❌ ¡FALLO!';
+                msg = ' ¡FALLO! ' + getBossTaunt();
+                feedback = '❌ ¡FALLO!';
+            }
+
+            state.fightMode = false;
+            state.fightStage = null;
+            state.fightBar = null;
+            state.actionConfirmed = false;
+            state.mettatonBubble.active = false;
+            updateEnemyHpDisplay(false);
+            stopVoiceBlips();
+            state.enemy.hp = Math.max(0, state.enemy.hp - damage);
+            if (damage > 0) {
+                playSfx(hitSfx);
+                state.enemy.pulse += 0.5;
+                state.slashEffect.active = true;
+                state.slashEffect.timer = state.slashEffect.duration;
+            }
+
+            if (state.enemy.hp <= 0) {
+                state.gameOver = true;
+                const victoryMsg = getBossVictory();
+                setText('💥 ¡VICTORIA!', ` ¡${state.enemy.name || 'METTATON'} DERROTADO! ${victoryMsg}`);
+                setFeedback('🏆 ¡GANASTE!');
+                optionsBtns.forEach(btn => btn.disabled = true);
+                actionBtns.forEach(btn => btn.disabled = true);
+                updateUI();
+                return;
+            }
+
+            setText(label, msg);
+            setFeedback(feedback);
+            state.menuActive = false;
+            state.focusOnButtons = true;
+            updateUI();
+
+            startAttack(damage > 0 ? 220 : 260, damage > 0 ? 3 : 4);
+            updateUI();
+
+            setTimeout(() => {
+                if (!state.gameOver) {
+                    state.attackPhase = false;
+                    state.bullets = [];
+                    state.menuActive = true;
+                    updateUI();
+                }
+            }, damage > 0 ? 3800 : 4600);
+        }
+
+        // ---------- UPDATE ----------
+        function update() {
+            state.enemy.pulse += 0.04;
+
+            let selectionChanged = false;
+
+            if (state.menuActive && !state.gameOver && !state.attackPhase && !state.fightMode && !state.actMode) {
+                if (state.focusOnButtons) {
+                    let newIndex = state.menuIndex;
+
+                    if (state.keys.up || state.keys.left) {
+                        newIndex = (state.menuIndex - 1 + 4) % 4;
+                        state.keys.up = false;
+                        state.keys.left = false;
+                        if (newIndex !== state.menuIndex) {
+                            selectionChanged = true;
+                            state.menuIndex = newIndex;
+                        }
+                    }
+                    if (state.keys.down || state.keys.right) {
+                        newIndex = (state.menuIndex + 1) % 4;
+                        state.keys.down = false;
+                        state.keys.right = false;
+                        if (newIndex !== state.menuIndex) {
+                            selectionChanged = true;
+                            state.menuIndex = newIndex;
+                        }
+                    }
+
+                    if (selectionChanged) {
+                        playSfx(selectionSfx);
+                        updateUI();
+                    }
+
+                    if (state.keys.z) {
+                        state.keys.z = false;
+                        confirmAction();
+                    }
+                }
+            }
+
+            if (state.actMode && state.menuActive) {
+                const options = document.querySelectorAll('.answer-option');
+                if (options.length > 0) {
+                    let newIndex = state.menuIndex;
+                    if (state.keys.up || state.keys.left) {
+                        newIndex = (state.menuIndex - 1 + options.length) % options.length;
+                        state.keys.up = false;
+                        state.keys.left = false;
+                        if (newIndex !== state.menuIndex) {
+                            selectionChanged = true;
+                            state.menuIndex = newIndex;
+                        }
+                    }
+                    if (state.keys.down || state.keys.right) {
+                        newIndex = (state.menuIndex + 1) % options.length;
+                        state.keys.down = false;
+                        state.keys.right = false;
+                        if (newIndex !== state.menuIndex) {
+                            selectionChanged = true;
+                            state.menuIndex = newIndex;
+                        }
+                    }
+
+                    if (selectionChanged) {
+                        playSfx(selectionSfx);
+                        updateOptionSelection();
+                        updateUI();
+                    }
+
+                    if (state.keys.z) {
+                        state.keys.z = false;
+                        if (state.menuIndex < options.length) {
+                            handleAnswer(state.menuIndex);
+                        }
+                    }
+                }
+            }
+
+            if (state.fightMode && state.fightStage === 'bar' && state.fightBar) {
+                const bar = state.fightBar;
+                bar.pos += bar.dir * bar.speed;
+                if (bar.pos >= bar.w) { bar.pos = bar.w;
+                    bar.dir = -1; }
+                if (bar.pos <= 0) { bar.pos = 0;
+                    bar.dir = 1; }
+            }
+
+            const speed = 3.5;
+            if (!state.gameOver && state.attackPhase) {
+                if (state.keys.up && state.battleSoul.y > BOX.y + SOUL_MARGIN) state.battleSoul.y -= speed;
+                if (state.keys.down && state.battleSoul.y < BOX.y + BOX.h - SOUL_MARGIN) state.battleSoul.y += speed;
+                if (state.keys.left && state.battleSoul.x > BOX.x + SOUL_MARGIN) state.battleSoul.x -= speed;
+                if (state.keys.right && state.battleSoul.x < BOX.x + BOX.w - SOUL_MARGIN) state.battleSoul.x += speed;
+            }
+
+            if (!state.gameOver && state.actMode) {
+                if (state.keys.up && state.battleSoul.y > BOX.y + SOUL_MARGIN) state.battleSoul.y -= speed;
+                if (state.keys.down && state.battleSoul.y < BOX.y + BOX.h - SOUL_MARGIN) state.battleSoul.y += speed;
+                if (state.keys.left && state.battleSoul.x > BOX.x + SOUL_MARGIN) state.battleSoul.x -= speed;
+                if (state.keys.right && state.battleSoul.x < BOX.x + BOX.w - SOUL_MARGIN) state.battleSoul.x += speed;
+            }
+
+            const soul = state.battleSoul;
+            const bullets = state.bullets;
+            let hit = false;
+
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                const b = bullets[i];
+                if (!b.active) continue;
+                b.x += b.vx;
+                b.y += b.vy;
+
+                if (b.x < BOX.x + 10 || b.x > BOX.x + BOX.w - 10) b.vx *= -0.9;
+                if (b.y < BOX.y + 10 || b.y > BOX.y + BOX.h - 10) b.vy *= -0.9;
+                b.x = Math.min(BOX.x + BOX.w - 10, Math.max(BOX.x + 10, b.x));
+                b.y = Math.min(BOX.y + BOX.h - 10, Math.max(BOX.y + 10, b.y));
+
+                const dx = b.x - soul.x;
+                const dy = b.y - soul.y;
+                if (Math.sqrt(dx * dx + dy * dy) < b.r + soul.size) {
+                    hit = true;
+                    b.active = false;
+                    bullets.splice(i, 1);
+                }
+            }
+
+            if (hit && state.attackPhase && !state.gameOver && !state.battleSoul.invincible) {
+                const dmg = Math.max(1, Math.floor((2 + Math.random() * 2) * (state.damageMultiplier || 1)));
+                state.hp = Math.max(0, state.hp - dmg);
+                playSfx(hurtSfx);
+                const taunt = getBossTaunt();
+                setText('💥 ¡GOLPE!', ` -${dmg} HP  (${taunt})`);
+                setFeedback(`💥 -${dmg} HP`);
+                updateUI();
+                state.battleSoul.invincible = true;
+                state.invincibleTimer = 70;
+
+                if (state.hp <= 0) {
+                    state.gameOver = true;
+                    state.disabled = true;
+                    const defeatMsg = getBossDefeat();
+                    setText('💀 ¡CANCELADO!', ` ${state.enemy.name || 'METTATON'} GANA! ${defeatMsg}`);
+                    optionsBtns.forEach(btn => btn.disabled = true);
+                    actionBtns.forEach(btn => btn.disabled = true);
+                    updateUI();
+                }
+            }
+
+            if (state.battleSoul.invincible) {
+                state.invincibleTimer--;
+                if (state.invincibleTimer <= 0) {
+                    state.battleSoul.invincible = false;
+                }
+            }
+
+            if (state.slashEffect.active) {
+                state.slashEffect.timer--;
+                if (state.slashEffect.timer <= 0) {
+                    state.slashEffect.active = false;
+                }
+            }
+
+            if (state.attackPhase) {
+                state.attackTimer--;
+                if (state.wavesLeft > 0) {
+                    state.waveTimer--;
+                    if (state.waveTimer <= 0) {
+                        fireNextWave();
+                        state.waveTimer = Math.max(20, Math.floor(state.attackTimer / (state.wavesLeft + 1)));
+                    }
+                }
+                if (state.attackTimer <= 0) {
+                    state.attackPhase = false;
+                    state.bullets = [];
+                    state.menuActive = true;
+                    updateUI();
+                }
+            }
+
+            if (!state.attackPhase && !state.gameOver && !state.fightMode && !state.actMode && state.menuActive &&
+                !state.keys.up && !state.keys.down && !state.keys.left && !state.keys.right) {
+                const now = performance.now() / 800;
+                state.battleSoul.x += Math.sin(now) * 0.15;
+                state.battleSoul.y += Math.cos(now * 0.7) * 0.15;
+                state.battleSoul.x = Math.min(CW - 20, Math.max(20, state.battleSoul.x));
+                state.battleSoul.y = Math.min(CH - 20, Math.max(20, state.battleSoul.y));
+            }
+        }
+
+        function updateOptionSelection() {
+            const options = document.querySelectorAll('.answer-option');
+            options.forEach((el, idx) => {
+                el.classList.toggle('active', idx === state.menuIndex);
+            });
+        }
+
+        // ---------- DRAW HELPERS ----------
+        function drawBattleSoul(x, y) {
+            const s = state.battleSoul.size;
+            const soulColor = state.soulColor || SOUL_COLORS['red'];
+            const isInverted = soulColor.inverted || false;
+
+            ctx.save();
+
+            if (isInverted) {
+                ctx.shadowColor = soulColor.shadow;
+                ctx.shadowBlur = 20;
+
+                ctx.fillStyle = soulColor.color;
+                ctx.beginPath();
+                ctx.moveTo(x, y - s * 0.9);
+                ctx.bezierCurveTo(x - s * 1.3, y + s * 0.3, x - s * 0.5, y + s * 1.2, x, y + s * 0.35);
+                ctx.bezierCurveTo(x + s * 0.5, y + s * 1.2, x + s * 1.3, y + s * 0.3, x, y - s * 0.9);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = soulColor.glow || soulColor.color;
+                ctx.globalAlpha = 0.3;
+                ctx.beginPath();
+                ctx.moveTo(x - 2, y - s * 0.5);
+                ctx.bezierCurveTo(x - s * 0.6, y + s * 0.1, x - s * 0.2, y + s * 0.6, x, y + s * 0.1);
+                ctx.bezierCurveTo(x + s * 0.2, y + s * 0.6, x + s * 0.6, y + s * 0.1, x + 2, y - s * 0.5);
+                ctx.closePath();
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+
+                ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(x, y - s * 0.9);
+                ctx.bezierCurveTo(x - s * 1.3, y + s * 0.3, x - s * 0.5, y + s * 1.2, x, y + s * 0.35);
+                ctx.bezierCurveTo(x + s * 0.5, y + s * 1.2, x + s * 1.3, y + s * 0.3, x, y - s * 0.9);
+                ctx.closePath();
+                ctx.stroke();
+
+            } else {
+                ctx.shadowColor = soulColor.shadow;
+                ctx.shadowBlur = 20;
+
+                ctx.fillStyle = soulColor.color;
+                ctx.beginPath();
+                ctx.moveTo(x, y + s * 0.9);
+                ctx.bezierCurveTo(x - s * 1.3, y - s * 0.3, x - s * 0.5, y - s * 1.2, x, y - s * 0.35);
+                ctx.bezierCurveTo(x + s * 0.5, y - s * 1.2, x + s * 1.3, y - s * 0.3, x, y + s * 0.9);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = soulColor.glow || soulColor.color;
+                ctx.globalAlpha = 0.4;
+                ctx.beginPath();
+                ctx.moveTo(x - 2, y + s * 0.5);
+                ctx.bezierCurveTo(x - s * 0.6, y - s * 0.1, x - s * 0.2, y - s * 0.6, x, y - s * 0.1);
+                ctx.bezierCurveTo(x + s * 0.2, y - s * 0.6, x + s * 0.6, y - s * 0.1, x + 2, y + s * 0.5);
+                ctx.closePath();
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+            }
+
+            ctx.restore();
+        }
+
+        function wrapText(text, x, y, maxWidth, lineHeight) {
+            const words = text.split(' ');
+            const lines = [];
+            let current = '';
+            words.forEach(word => {
+                const test = current ? current + ' ' + word : word;
+                if (ctx.measureText(test).width > maxWidth && current) {
+                    lines.push(current);
+                    current = word;
+                } else {
+                    current = test;
+                }
+            });
+            if (current) lines.push(current);
+            const startY = y - ((lines.length - 1) * lineHeight) / 2 + 4;
+            lines.forEach((line, i) => {
+                ctx.fillText(line, x, startY + i * lineHeight);
+            });
+        }
+
+        function drawSpeechBubble(text) {
+            const ex = state.enemy.x,
+                ey = state.enemy.y;
+            const bw = 460,
+                bh = 54;
+            const bx = ex - bw / 2,
+                by = 4;
+
+            ctx.save();
+            ctx.fillStyle = '#000000';
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.roundRect(bx, by, bw, bh, 10);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(ex - 14, by + bh - 2);
+            ctx.lineTo(ex + 14, by + bh - 2);
+            ctx.lineTo(ex, by + bh + 16);
+            ctx.closePath();
+            ctx.fillStyle = '#000000';
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(ex - 14, by + bh - 2);
+            ctx.lineTo(ex, by + bh + 16);
+            ctx.lineTo(ex + 14, by + bh - 2);
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '11px "Press Start 2P", monospace';
+            ctx.textAlign = 'center';
+            wrapText(text, ex, by + bh / 2, bw - 44, 15);
+            ctx.restore();
+        }
+
+        // ---------- DRAW ----------
+        function draw() {
+            ctx.clearRect(0, 0, CW, CH);
+
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, CW, CH);
+
+            ctx.strokeStyle = '#1a1a1a';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < CW; i += 40) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, CH);
+                ctx.stroke();
+            }
+            for (let i = 0; i < CH; i += 40) {
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(CW, i);
+                ctx.stroke();
+            }
+
+            if (state.attackPhase || state.actMode || (state.fightMode && state.fightStage === 'bar')) {
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(BOX.x, BOX.y, BOX.w, BOX.h);
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(BOX.x, BOX.y, BOX.w, BOX.h);
+            }
+
+            const ex = state.enemy.x,
+                ey = state.enemy.y;
+            const pulse = Math.sin(state.enemy.pulse) * 4;
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '14px "Press Start 2P", monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText(state.enemy.name || 'METTATON', ex, ey - 52 + pulse);
+
+            if (currentSprite && currentSprite.complete && currentSprite.naturalWidth > 0) {
+                const sw = 120,
+                    sh = 120 * (currentSprite.naturalHeight / currentSprite.naturalWidth || 1);
+                ctx.save();
+                ctx.shadowColor = 'rgba(255,255,255,0.25)';
+                ctx.shadowBlur = 18;
+                ctx.drawImage(currentSprite, ex - sw / 2, ey - sh / 2 + pulse, sw, sh);
+                ctx.restore();
+            } else {
+                ctx.shadowColor = 'rgba(255,255,255,0.3)';
+                ctx.shadowBlur = 20;
+                ctx.fillStyle = '#ffffff';
+                ctx.shadowBlur = 30;
+                ctx.beginPath();
+                ctx.roundRect(ex - 35, ey - 35 + pulse, 70, 70, 14);
+                ctx.fill();
+
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = '#222222';
+                ctx.beginPath();
+                ctx.arc(ex, ey - 4 + pulse, 22, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(ex - 12, ey - 8 + pulse, 6, 0, Math.PI * 2);
+                ctx.arc(ex + 12, ey - 8 + pulse, 6, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#000000';
+                ctx.beginPath();
+                ctx.arc(ex - 14, ey - 10 + pulse, 2.5, 0, Math.PI * 2);
+                ctx.arc(ex + 10, ey - 10 + pulse, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(ex, ey + 8 + pulse, 10, 0.1, Math.PI - 0.1);
+                ctx.stroke();
+
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = '#333333';
+                ctx.font = '8px "Press Start 2P", monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText('← SPRITE HERE →', ex, ey + 50 + pulse);
+            }
+
+            if (state.slashEffect.active) {
+                const t = state.slashEffect.timer / state.slashEffect.duration;
+                if (state.slashEffect.timer > state.slashEffect.duration - 4) {
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+                    ctx.fillRect(0, 0, CW, CH);
+                }
+                const len = 100;
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, t);
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 3 + 5 * t;
+                ctx.shadowColor = 'rgba(255,255,255,0.9)';
+                ctx.shadowBlur = 20;
+                ctx.beginPath();
+                ctx.moveTo(ex - len / 2, ey - len / 2);
+                ctx.lineTo(ex + len / 2, ey + len / 2);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(ex + len / 2, ey - len * 0.3);
+                ctx.lineTo(ex - len / 2, ey + len * 0.3);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            if (state.mettatonBubble.active) {
+                drawSpeechBubble(state.mettatonBubble.text);
+            }
+
+            if (state.actMode) {
+                state.actTargets.forEach(t => {
+                    const dx = state.battleSoul.x - t.x,
+                        dy = state.battleSoul.y - t.y;
+                    const soulInside = (dx * dx + dy * dy) < t.r * t.r;
+
+                    ctx.setLineDash(soulInside ? [] : [5, 5]);
+                    ctx.strokeStyle = soulInside ? '#ffffff' : '#777777';
+                    ctx.lineWidth = soulInside ? 3 : 2;
+                    ctx.beginPath();
+                    ctx.arc(t.x, t.y, t.r, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+
+                    if (soulInside) {
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+                        ctx.beginPath();
+                        ctx.arc(t.x, t.y, t.r, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+
+                    ctx.fillStyle = soulInside ? '#ffffff' : '#aaaaaa';
+                    ctx.font = '11px "Press Start 2P", monospace';
+                    ctx.textAlign = 'center';
+                    wrapText(t.label, t.x, t.y, t.r * 1.7, 14);
+                });
+            }
+
+            if (state.fightMode && state.fightStage === 'bar' && state.fightBar) {
+                const bar = state.fightBar;
+                const barTop = bar.y - bar.h / 2;
+
+                ctx.fillStyle = '#333333';
+                ctx.font = '11px "Press Start 2P", monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText('¡PRESIONA Z!', bar.x + bar.w / 2, barTop - 18);
+
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(bar.x, barTop, bar.w, bar.h);
+
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+                ctx.fillRect(bar.x + bar.zoneCenter - bar.zoneHalfWidth, barTop, bar.zoneHalfWidth * 2, bar.h);
+
+                ctx.fillStyle = '#ff4444';
+                ctx.fillRect(bar.x + bar.pos - 3, barTop - 6, 6, bar.h + 12);
+            }
+
+            ctx.shadowColor = 'rgba(255,255,255,0.5)';
+            ctx.shadowBlur = 15;
+            for (const b of state.bullets) {
+                ctx.beginPath();
+                ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+                ctx.fillStyle = '#ffffff';
+                ctx.fill();
+                ctx.fillStyle = '#888888';
+                ctx.shadowBlur = 20;
+                ctx.beginPath();
+                ctx.arc(b.x - 2, b.y - 2, b.r * 0.4, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.shadowBlur = 0;
+
+            if (state.attackPhase || state.actMode) {
+                const flickerOff = state.battleSoul.invincible && Math.floor(state.invincibleTimer / 4) % 2 === 0;
+                if (!flickerOff) drawBattleSoul(state.battleSoul.x, state.battleSoul.y);
+            }
+
+            if (state.attackPhase) {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+                ctx.fillRect(0, 0, CW, CH);
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '12px "Press Start 2P", monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText('⚡ ¡ESQUIVA!', CW / 2, 30);
+            }
+        }
+
+        // ---------- CANVAS POLYFILL ----------
+        if (!CanvasRenderingContext2D.prototype.roundRect) {
+            CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+                if (r > w / 2) r = w / 2;
+                if (r > h / 2) r = h / 2;
+                this.moveTo(x + r, y);
+                this.lineTo(x + w - r, y);
+                this.quadraticCurveTo(x + w, y, x + w, y + r);
+                this.lineTo(x + w, y + h - r);
+                this.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+                this.lineTo(x + r, y + h);
+                this.quadraticCurveTo(x, y + h, x, y + h - r);
+                this.lineTo(x, y + r);
+                this.quadraticCurveTo(x, y, x + r, y);
+                return this;
+            };
+        }
+
+        // ---------- GAME LOOP ----------
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // ---------- RESET - SOLO RECARGA LA PÁGINA ----------
+        function resetGame() {
+            location.reload();
+        }
+
+        // ---------- EVENT LISTENERS ----------
+        optionsBtns.forEach((btn, idx) => {
+            btn.addEventListener('click', () => handleAnswer(idx));
+        });
+
+        document.addEventListener('keydown', (e) => {
+            const key = e.key;
+
+            if (document.activeElement === nameInput) {
+                return;
+            }
+
+            if (key === 'ArrowUp') { e.preventDefault();
+                state.keys.up = true; }
+            if (key === 'ArrowDown') { e.preventDefault();
+                state.keys.down = true; }
+            if (key === 'ArrowLeft') { e.preventDefault();
+                state.keys.left = true; }
+            if (key === 'ArrowRight') { e.preventDefault();
+                state.keys.right = true; }
+
+            if (key === 'z' || key === 'Z') {
+                e.preventDefault();
+                state.keys.z = true;
+                if (state.fightMode && state.fightStage === 'select') {
+                    confirmFightTarget();
+                } else if (state.fightMode && state.fightStage === 'bar') {
+                    resolveFightBar();
+                } else if (state.actMode) {
+                    selectActTarget();
+                } else if (state.menuActive && !state.actionConfirmed) {
+                    confirmAction();
+                }
+            }
+
+            if (key === 'x' || key === 'X') {
+                e.preventDefault();
+                state.keys.x = true;
+
+                if (state.fightMode) {
+                    state.fightMode = false;
+                    state.fightStage = null;
+                    state.fightBar = null;
+                    updateEnemyHpDisplay(false);
+                    state.mettatonBubble.active = false;
+                    stopVoiceBlips();
+                    document.querySelectorAll('.answer-option').forEach(el => el.remove());
+                    resetMenuState();
+                    const taunt = getBossTaunt();
+                    setText('📺 METTATON', ' ¡COBARDE! ' + taunt);
+                    setFeedback('😤 HUISTE');
+                } else if (state.actMode) {
+                    state.actMode = false;
+                    state.actTargets = [];
+                    state.mettatonBubble.active = false;
+                    stopVoiceBlips();
+                    document.querySelectorAll('.answer-option').forEach(el => el.remove());
+                    state.menuActive = true;
+                    state.focusOnButtons = true;
+                    state.actionConfirmed = false;
+                    state.menuIndex = 1;
+                    const qData = getCurrentQuestionData();
+                    const taunt = getBossTaunt();
+                    setText('📺 METTATON', qData.question + ' (' + taunt + ')');
+                    updateUI();
+                } else if (!state.gameOver && !state.attackPhase) {
+                    resetMenuState();
+                }
+            }
+
+            if (key === 'r' || key === 'R') {
+                e.preventDefault();
+                resetGame();
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            const key = e.key;
+
+            if (document.activeElement === nameInput) {
+                return;
+            }
+
+            if (key === 'ArrowUp') { e.preventDefault();
+                state.keys.up = false; }
+            if (key === 'ArrowDown') { e.preventDefault();
+                state.keys.down = false; }
+            if (key === 'ArrowLeft') { e.preventDefault();
+                state.keys.left = false; }
+            if (key === 'ArrowRight') { e.preventDefault();
+                state.keys.right = false; }
+            if (key === 'z' || key === 'Z') { state.keys.z = false; }
+            if (key === 'x' || key === 'X') { state.keys.x = false; }
+        });
+
+        resetBtn.addEventListener('click', resetGame);
+
+        // ---- INIT ----
+        state.enemy.hp = 12;
+        state.enemy.maxHp = 12;
+        setText('📺 METTATON', ' ¡BIENVENIDO, DARLING!');
+        gameLoop();
+
+        console.log('📚 METTATON QUIZ - REFUERZO ESCOLAR');
+        console.log('⬆⬇⬅➡  Navega el menú/opciones con las flechas');
+        console.log('Z  Confirma acción / Selecciona respuesta / Ataca en modo PELEA');
+        console.log('X  Cancela modo PELEA o sale del modo ACT');
+        console.log('R  Recarga la página');
+        console.log('📚 Materias: Matemáticas, Lectura, Ciencias, Historia, Geografía, Computación, Arte, Música');
+        console.log('💛 MERCY: Mensajes graciosos de Mettaton');
+        console.log('🔑 Nombres secretos: Tina, Toe, Susie, Chara, Kris, Frisk, Sans, Gaster, Temmie');
+    </script>
+</body>
+</html>
